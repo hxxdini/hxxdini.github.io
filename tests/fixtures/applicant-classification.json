@@ -1,0 +1,130 @@
+[
+  {
+    "dataset": "live",
+    "id": "3f84a85c5d48f69845cdd017",
+    "title": "YRV Global Teachers Grant 2026: Funding for Cultural Education Projects",
+    "summary": "The Youth Research Vox Global Teachers Grant supports secondary school English teachers worldwide in implementing classroom projects. Individual grants are offered to teachers.",
+    "eligibility": ["NGOs/CSOs", "Individuals", "Researchers/Academia"],
+    "countries": [],
+    "type": "grant",
+    "expectedApplicantType": "individual/fellow",
+    "expectedSchoolEligibleUganda": false
+  },
+  {
+    "dataset": "live",
+    "id": "c3eb68fc89dd6666a125acae",
+    "title": "Bennington Young Writers Awards: Celebrating High School Literary Talent",
+    "summary": "The competition invites students in grades 9-12 worldwide to submit original writing for cash prizes and scholarships.",
+    "eligibility": ["NGOs/CSOs", "Individuals"],
+    "countries": [],
+    "type": "fellowship",
+    "expectedApplicantType": "individual/fellow",
+    "expectedSchoolEligibleUganda": false
+  },
+  {
+    "dataset": "live",
+    "id": "36750b5be74b68619895cf9d",
+    "title": "Bennington Young Scientists Awards: Celebrating Innovative High School STEM Projects",
+    "summary": "The awards invite outstanding high school students worldwide to submit STEM projects for cash prizes and scholarships.",
+    "eligibility": ["NGOs/CSOs", "Individuals", "Researchers/Academia"],
+    "countries": [],
+    "type": "fellowship",
+    "expectedApplicantType": "individual/fellow",
+    "expectedSchoolEligibleUganda": false
+  },
+  {
+    "dataset": "live",
+    "id": "5efc6803450704a4788b0a5a",
+    "title": "Applications Open for Dementia, Mental Health and Brain Ageing School (Africa)",
+    "summary": "An in-person professional development programme in Nairobi, Kenya, for graduate students, early-career researchers, fellows and medical professionals across Africa.",
+    "eligibility": ["NGOs/CSOs", "Individuals", "Researchers/Academia"],
+    "countries": ["Kenya"],
+    "type": "grant",
+    "expectedApplicantType": "individual/fellow",
+    "expectedSchoolEligibleUganda": false
+  },
+  {
+    "dataset": "live",
+    "id": "1887cb60a2c1c613f2df3ba1",
+    "title": "Facilitate the engagement in global ICT standardisation development (CSA)",
+    "summary": "Open Call 3 provides short-term and long-term funding to support ICT standardisation.",
+    "eligibility": [],
+    "countries": [],
+    "type": "grant",
+    "expectedApplicantType": "unknown",
+    "expectedSchoolEligibleUganda": false
+  },
+  {
+    "dataset": "live",
+    "id": "d26186c9fe2e42a562a62172",
+    "title": "Open Call for Implementation of Livelihood Activities in Nakivale and Oruchinga (Uganda)",
+    "summary": "Open Call for Implementation of Livelihood Activities in Nakivale and Oruchinga (Uganda) - fundsforNGOs",
+    "eligibility": ["NGOs/CSOs"],
+    "countries": ["Uganda"],
+    "type": "grant",
+    "expectedApplicantType": "unknown",
+    "expectedSchoolEligibleUganda": false
+  },
+  {
+    "dataset": "live",
+    "id": "cb351fac95ebfd3412e3da2c",
+    "title": "2027 Call for Food Assistance and Nutrition Support in Kiryandongo (Uganda)",
+    "summary": "2027 Call for Food Assistance and Nutrition Support in Kiryandongo (Uganda) - fundsforNGOs",
+    "eligibility": ["NGOs/CSOs"],
+    "countries": ["Uganda"],
+    "type": "grant",
+    "expectedApplicantType": "unknown",
+    "expectedSchoolEligibleUganda": false
+  },
+  {
+    "dataset": "live",
+    "id": "c62ad90e7e27c05502b5f676",
+    "title": "Renovation of 4N0. Classrooms at Ole Kuntere Primary School",
+    "summary": "Kenya PPIP tender for classroom renovation works.",
+    "eligibility": [],
+    "countries": ["Kenya"],
+    "type": "tender",
+    "expectedApplicantType": "firm/consultancy",
+    "expectedSchoolEligibleUganda": false
+  },
+  {
+    "dataset": "brief",
+    "title": "Mak-RIF Round 8",
+    "summary": "Eligible applicants are Makerere University staff only.",
+    "eligibility": ["Researchers/Academia"],
+    "countries": ["Uganda"],
+    "type": "grant",
+    "expectedApplicantType": "university staff",
+    "expectedSchoolEligibleUganda": false
+  },
+  {
+    "dataset": "brief",
+    "title": "Building Tomorrow Uganda Fellowship",
+    "summary": "Individual fellows apply for this Uganda fellowship.",
+    "eligibility": ["Individuals"],
+    "countries": ["Uganda"],
+    "type": "fellowship",
+    "expectedApplicantType": "individual/fellow",
+    "expectedSchoolEligibleUganda": false
+  },
+  {
+    "dataset": "brief",
+    "title": "HEPS Uganda You Lead Innovation Challenge",
+    "summary": "The challenge is for youth-led innovators.",
+    "eligibility": ["Individuals"],
+    "countries": ["Uganda"],
+    "type": "grant",
+    "expectedApplicantType": "individual/fellow",
+    "expectedSchoolEligibleUganda": false
+  },
+  {
+    "dataset": "brief",
+    "title": "MOES-ULEARN/SRVCS/2026-2027/00011",
+    "summary": "The Ministry of Education and Sports notice seeks a consulting firm.",
+    "eligibility": [],
+    "countries": ["Uganda"],
+    "type": "tender",
+    "expectedApplicantType": "firm/consultancy",
+    "expectedSchoolEligibleUganda": false
+  }
+]

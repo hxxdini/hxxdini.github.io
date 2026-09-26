@@ -99,6 +99,97 @@ export function detectEligibility(text) {
   return hits;
 }
 
+const SCHOOL_APPLICANT_PATTERNS = [
+  /\b(?:(?:registered|accredited|licensed|public|private|primary|secondary|elementary|high|local|ugandan)\s+)*schools?\s+(?:are\s+)?(?:eligible(?:\s+to\s+apply)?|may\s+apply|can\s+apply|are\s+invited\s+to\s+apply|can\s+submit\s+(?:an?\s+)?applications?)\b/i,
+  /\b(?:eligible|qualifying)\s+(?:(?:registered|accredited|licensed|public|private|primary|secondary|elementary|high|local|ugandan)\s+)*(?:schools?|educational institutions?)(?![-\w])\b/i,
+  /\b(?:eligible|qualifying)\s+(?:registered\s+)?(?:primary and secondary|primary|secondary|public|private)\s+schools?\b/i,
+  /\b(?:applications?|grants?|funding)\b.{0,45}\b(?:open|available)\b.{0,45}\b(?:schools?|educational institutions?)\b/i,
+  /\bapplications?\s+from\s+(?:(?:registered|accredited|public|private|primary|secondary|local|ugandan)\s+)*(?:schools?|educational institutions?)\b/i,
+  /\beligible applicants?\s+(?:include|may include|are)\b[^.;]{0,80}\b(?:schools?|educational institutions?)\b/i,
+  /\b(?:educational|education) institutions?\s+(?:may|can|are invited to)\s+apply\b/i,
+  /\bschools?\s+(?:are eligible to receive|may receive|can receive)\s+(?:a\s+)?(?:grant|funding|financial support)\b/i,
+];
+
+function textList(value) {
+  if (Array.isArray(value)) return value.map(String);
+  if (typeof value !== 'string' || !value.trim()) return [];
+  try {
+    const parsed = JSON.parse(value);
+    if (Array.isArray(parsed)) return parsed.map(String);
+  } catch {}
+  return [value.trim()];
+}
+
+function hasAny(text, patterns) {
+  return patterns.some((pattern) => pattern.test(text));
+}
+
+export function classifyApplicant({ title = '', summary = '', description = '', eligibility = [], countries = [], type = '' } = {}) {
+  const sourceText = `${title} ${summary} ${description}`;
+  const text = sourceText
+    .replace(/funds\s*for\s*ngos/gi, ' ')
+    .replace(/\bthe post\b[\s\S]*?\bfirst appeared on\b[\s\S]*$/i, ' ')
+    .toLowerCase();
+  const eligibilityLabels = textList(eligibility).map((value) => value.toLowerCase());
+  const countryLabels = textList(countries).map((value) => value.toLowerCase());
+  const typeLabel = String(type ?? '').toLowerCase();
+  const eligibilityText = eligibilityLabels.join(' ');
+  const allText = `${text} ${eligibilityText}`;
+
+  const schoolApplicant = hasAny(allText, SCHOOL_APPLICANT_PATTERNS);
+  const universityStaff = hasAny(allText, [
+    /\b(?:university|universities|academic)\s+(?:staff|faculty|employees|research staff)\b/i,
+    /\b(?:staff|faculty members|academics)\b.{0,55}\b(?:university|universities|makerere)\b/i,
+    /\bmakerere\b.{0,55}\b(?:staff|faculty)\b/i,
+  ]);
+  const individualApplicant = hasAny(allText, [
+    /\bindividual\s+(?:applicants?|consultants?|consultancy)\b/i,
+    /\bindividuals?\s+(?:may|can)\s+apply\b/i,
+    /\bapply\s+as\s+(?:an?\s+)?individual\b/i,
+    /\b(?:fellowships?|fellows?|scholarships?)\b/i,
+    /\b(?:students?|teachers?)\s+(?:may|can|are eligible to)\s+apply\b/i,
+    /\byouth[- ]led innovators?\b/i,
+  ]) || eligibilityLabels.some((label) => /^individuals?$/.test(label));
+  const governmentApplicant = hasAny(allText, [
+    /\b(?:governments?|ministries|local authorities|municipalities|public agencies)\b.{0,70}\b(?:eligible|applicants?|may apply|can apply|invited to apply|apply)\b/i,
+    /\b(?:eligible applicants?|applicants?|applications? from|proposals? from|open to)\b.{0,70}\b(?:governments?|ministries|local authorities|municipalities|public agencies)\b/i,
+  ]);
+  const ngoApplicant = hasAny(allText, [
+    /\b(?:ngos?|csos?|civil society organizations?|nonprofits?|non-profit organizations?|community-based organizations?)\b.{0,70}\b(?:eligible|applicants?|may apply|can apply|apply|applications?|proposals?)\b/i,
+    /\b(?:eligible applicants?|applicants?|applications? from|proposals? from|open to)\b.{0,70}\b(?:ngos?|csos?|civil society organizations?|nonprofits?|non-profit organizations?|community-based organizations?)\b/i,
+  ]) || (
+    eligibilityLabels.some((label) => /^(?:ngos\/csos|local\/national organizations)$/.test(label))
+    && !/funds\s*for\s*ngos/i.test(sourceText)
+    && !individualApplicant
+  );
+  const individualConsultancy = /\bindividual\s+(?:consultant|consultancy)\b/i.test(allText);
+  const firmApplicant = !individualConsultancy && (
+    hasAny(allText, [
+      /\b(?:consulting firms?|consultancies|consultants?|contractors?|suppliers?|vendors?|companies|firms|businesses|smes|start-?ups?)\b/i,
+    ]) || eligibilityLabels.some((label) => /^smes\/startups$/.test(label))
+  );
+
+  let applicantType = 'unknown';
+  if (schoolApplicant) applicantType = 'school/institution';
+  else if (universityStaff) applicantType = 'university staff';
+  else if (individualApplicant) applicantType = 'individual/fellow';
+  else if (governmentApplicant) applicantType = 'government';
+  else if (ngoApplicant) applicantType = 'NGO';
+  else if (firmApplicant || typeLabel === 'tender') applicantType = 'firm/consultancy';
+
+  const hasUgandaScope = countryLabels.some((country) => /\buganda\b/.test(country))
+    || /\b(?:uganda|ugandan|worldwide|globally|global applicants|international applicants|african countries|across (?:east africa|africa|sub[- ]?saharan africa)|throughout (?:east africa|africa))\b/i.test(text);
+  const fundingCall = typeLabel === 'grant' || (
+    !['tender', 'fellowship', 'prize'].includes(typeLabel)
+    && /\b(?:grants?|funding|financial support)\b/i.test(allText)
+  );
+
+  return {
+    applicantType,
+    schoolEligibleUganda: schoolApplicant && hasUgandaScope && fundingCall && typeLabel !== 'tender',
+  };
+}
+
 const MONTHS = {
   jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5,
   jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11,
