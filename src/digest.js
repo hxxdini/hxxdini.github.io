@@ -21,6 +21,7 @@ const rows = db.prepare(`
     AND (deadline >= ? OR (deadline IS NULL AND first_seen >= datetime('now', '-14 days')))
   ORDER BY (deadline IS NULL), deadline ASC
 `).all(today);
+const schoolItems = rows.filter((row) => row.school_eligible_uganda === 1);
 
 const sections = {
   grant: { title: 'Grants & Funding Calls', items: [] },
@@ -48,6 +49,7 @@ function itemMd(r) {
     r.funder,
     countries.length ? countries.join(', ') : null,
     sectors.length ? sectors.slice(0, 3).join(' · ') : null,
+    r.applicant_type && r.applicant_type !== 'unknown' ? `Applicant: ${r.applicant_type}` : null,
     r.amount,
   ].filter(Boolean).join(' | ');
   return `- **[${r.title}](${r.url})**\n  ${deadlineStr}${meta ? ` — ${meta}` : ''}\n  <sub>via ${r.source}</sub>`;
@@ -58,6 +60,12 @@ let md = `# FundRadar East Africa — Weekly Digest\n\n`;
 md += `**Issue #1 · ${today}** · ${rows.length} live opportunities tracked across ${db.prepare('SELECT COUNT(DISTINCT source) c FROM opportunities').get().c} sources\n\n`;
 md += `> Every open grant, tender and opportunity relevant to East African organizations — verified against the primary source, every week.\n\n`;
 if (editorsNote) md += `## Editor's note\n\n${editorsNote}\n\n`;
+md += `## For schools in Uganda (${schoolItems.length})\n\n`;
+if (schoolItems.length) {
+  md += schoolItems.map(itemMd).join('\n\n') + '\n\n';
+} else {
+  md += `_No current live calls clearly identify schools or educational institutions as eligible applicants in Uganda. The automated flag is conservative; verify the full call before acting._\n\n`;
+}
 for (const s of Object.values(sections)) {
   if (s.items.length === 0) continue;
   md += `## ${s.title} (${s.items.length})\n\n`;

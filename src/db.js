@@ -1,6 +1,7 @@
 import { DatabaseSync } from 'node:sqlite';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { classifyApplicant } from './normalize.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const DB_PATH = path.join(ROOT, 'data', 'fundradar.db');
@@ -20,6 +21,8 @@ export function openDb() {
       countries     TEXT,              -- JSON array
       sectors       TEXT,              -- JSON array
       eligibility   TEXT,              -- JSON array
+      applicant_type TEXT,
+      school_eligible_uganda INTEGER DEFAULT 0,
       amount        TEXT,
       ea_relevant   INTEGER DEFAULT 0, -- 1 = relevant to East Africa
       published_at  TEXT,
@@ -31,6 +34,26 @@ export function openDb() {
     CREATE INDEX IF NOT EXISTS idx_opp_source ON opportunities(source);
     CREATE INDEX IF NOT EXISTS idx_opp_ea ON opportunities(ea_relevant);
   `);
+
+  const columns = new Set(db.prepare('PRAGMA table_info(opportunities)').all().map((column) => column.name));
+  if (!columns.has('applicant_type')) db.exec('ALTER TABLE opportunities ADD COLUMN applicant_type TEXT');
+  if (!columns.has('school_eligible_uganda')) db.exec('ALTER TABLE opportunities ADD COLUMN school_eligible_uganda INTEGER DEFAULT 0');
+
+  const unclassified = db.prepare(`
+    SELECT id, title, summary, eligibility, countries, type
+    FROM opportunities
+    WHERE applicant_type IS NULL
+  `).all();
+  const updateClassification = db.prepare(`
+    UPDATE opportunities
+    SET applicant_type = ?, school_eligible_uganda = ?
+    WHERE id = ?
+  `);
+  for (const row of unclassified) {
+    const classification = classifyApplicant(row);
+    updateClassification.run(classification.applicantType, classification.schoolEligibleUganda ? 1 : 0, row.id);
+  }
+
   return db;
 }
 
@@ -56,5 +79,16 @@ export function upsertOpportunity(db, o) {
     o.ea_relevant ? 1 : 0, o.published_at ?? null, now, now,
     o.raw ? JSON.stringify(o.raw).slice(0, 20000) : null
   );
+  const current = db.prepare(`
+    SELECT title, summary, eligibility, countries, type
+    FROM opportunities
+    WHERE id = ?
+  `).get(o.id);
+  const classification = classifyApplicant(current);
+  db.prepare(`
+    UPDATE opportunities
+    SET applicant_type = ?, school_eligible_uganda = ?
+    WHERE id = ?
+  `).run(classification.applicantType, classification.schoolEligibleUganda ? 1 : 0, o.id);
   return info.changes > 0 && info.lastInsertRowid !== undefined;
 }

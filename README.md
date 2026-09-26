@@ -12,6 +12,12 @@ sources (APIs/RSS/scrapers) → normalize + classify → SQLite → weekly diges
 - `npm run digest` — generate `out/digest-YYYY-MM-DD.md` from live EA-relevant records (prepends `out/editors-note.md` if present)
 - `npm run stats` — database breakdown by source/type/country
 
+## Applicant signals
+
+Each opportunity receives a deterministic `applicant_type` label from its title, summary and eligibility tags. The `school_eligible_uganda` flag is set only when a funding call explicitly names schools or educational institutions as applicants and the available text shows Uganda or a broad regional/global scope. Tenders, fellowships and prizes are not flagged as school grants. Records without clear applicant evidence remain `unknown`; confirm all eligibility against the primary source.
+
+The digest places matching calls in a `For schools in Uganda` section, and the dashboard has a matching filter. The curated labeled sample and rule checks run with `npm test`.
+
 ## Sources (v1)
 
 | Source | Method | Notes |
