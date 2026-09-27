@@ -7,6 +7,7 @@
     "pipeline": "node src/pipeline.js",
     "digest": "node src/digest.js",
     "stats": "node src/stats.js",
+    "export:for-you": "node src/export-for-you.js",
     "test": "node tests/applicant-classifier.test.js && node tests/source-adapters.test.js && node tests/uganda-egp-title.test.js"
   },
   "dependencies": {

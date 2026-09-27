@@ -26,6 +26,8 @@ jobs:
         run: |
           node src/digest.js
           node src/site.js
+      - name: Export leads for the applicant finder
+        run: npm run export:for-you
       - name: Commit updated data
         run: |
           git config user.name "fundradar-bot"

@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#102522">
+  <meta name="description" content="Find open FundRadar opportunities matched to your applicant type and country.">
+  <title>Find calls for you · FundRadar EA</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #102522;
+      --muted: #65736e;
+      --paper: #f3f5ef;
+      --surface: #ffffff;
+      --line: #dce4dd;
+      --green: #176c57;
+      --green-dark: #10523f;
+      --mint: #dff4e9;
+      --lime: #d5f36b;
+      --amber: #a35e18;
+      --amber-soft: #fff4e2;
+      --shadow: 0 12px 34px rgba(16, 37, 34, .07);
+      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      --serif: Iowan Old Style, "Palatino Linotype", "Book Antiqua", Georgia, serif;
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--paper); color: var(--ink); font: 16px/1.5 var(--sans); }
+    a { color: inherit; }
+    button, select { font: inherit; }
+    .skip-link { position: absolute; top: -60px; left: 16px; z-index: 5; padding: 10px 14px; background: var(--lime); color: var(--ink); border-radius: 8px; }
+    .skip-link:focus { top: 12px; }
+    .shell { width: min(100% - 32px, 1000px); margin: 0 auto; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; min-height: 74px; border-bottom: 1px solid rgba(255,255,255,.18); }
+    .masthead { background: var(--ink); color: #f8fbf5; }
+    .brand { display: inline-flex; gap: 10px; align-items: center; color: inherit; font-size: 17px; font-weight: 800; letter-spacing: -.04em; text-decoration: none; }
+    .brand-mark { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 10px; background: var(--lime); color: var(--ink); font-size: 14px; font-weight: 900; }
+    .brand small { color: #aabeb3; font-size: 10px; letter-spacing: .14em; }
+    .back-link { padding: 8px 12px; border: 1px solid rgba(255,255,255,.22); border-radius: 999px; color: #f8fbf5; font-size: 13px; font-weight: 700; text-decoration: none; }
+    .back-link:hover { background: rgba(255,255,255,.1); }
+    .intro { position: relative; overflow: hidden; padding: 47px 0 48px; background: var(--ink); color: #f8fbf5; }
+    .intro::after { position: absolute; right: -80px; bottom: -220px; width: 440px; height: 440px; border: 1px solid rgba(213,243,107,.18); border-radius: 50%; box-shadow: 0 0 0 36px rgba(213,243,107,.035), 0 0 0 78px rgba(213,243,107,.025); content: ""; pointer-events: none; }
+    .intro-inner { position: relative; z-index: 1; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 8px; color: var(--lime); font-size: 11px; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
+    .eyebrow::before { width: 7px; height: 7px; border-radius: 50%; background: var(--lime); content: ""; }
+    h1 { max-width: 700px; margin: 14px 0 11px; font: 500 clamp(39px, 8vw, 66px)/.99 var(--serif); letter-spacing: -.055em; }
+    h1 em { color: var(--lime); font-weight: 500; }
+    .intro-copy { max-width: 560px; margin: 0; color: #c4d0c8; font-size: 16px; }
+    .feed-facts { display: flex; flex-wrap: wrap; gap: 10px 18px; margin-top: 25px; color: #c4d0c8; font-size: 12px; }
+    .feed-facts strong { color: #f8fbf5; font-variant-numeric: tabular-nums; }
+    main { padding: 30px 0 64px; }
+    .matcher { padding: 22px; border: 1px solid var(--line); border-radius: 19px; background: var(--surface); box-shadow: var(--shadow); }
+    .section-kicker { margin: 0 0 4px; color: var(--green); font-size: 10px; font-weight: 850; letter-spacing: .15em; text-transform: uppercase; }
+    h2 { margin: 0; font: 600 26px/1.15 var(--serif); letter-spacing: -.03em; }
+    .section-note { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
+    .persona-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; margin-top: 19px; }
+    .persona { position: relative; display: flex; min-height: 76px; flex-direction: column; align-items: flex-start; justify-content: center; gap: 5px; padding: 11px 12px; border: 1px solid var(--line); border-radius: 13px; background: #fff; color: var(--ink); text-align: left; cursor: pointer; transition: border-color .16s ease, background .16s ease, transform .16s ease; }
+    .persona:hover { transform: translateY(-1px); border-color: #82b39f; }
+    .persona:focus-visible, select:focus-visible, .lead-title a:focus-visible, .back-link:focus-visible { outline: 3px solid #9bcf70; outline-offset: 3px; }
+    .persona[aria-pressed="true"] { border-color: var(--green); background: var(--mint); box-shadow: inset 0 0 0 1px var(--green); }
+    .persona-top { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 8px; }
+    .persona-name { font-size: 13px; font-weight: 760; line-height: 1.15; }
+    .persona-count { min-width: 23px; padding: 2px 6px; border-radius: 999px; background: #eef2ec; color: var(--muted); font-size: 10px; font-weight: 800; text-align: center; font-variant-numeric: tabular-nums; }
+    .persona[aria-pressed="true"] .persona-count { background: #c4e8d4; color: var(--green-dark); }
+    .persona-hint { color: var(--muted); font-size: 10px; line-height: 1.2; }
+    .geo-row { display: flex; flex-direction: column; gap: 7px; margin-top: 19px; padding-top: 17px; border-top: 1px solid var(--line); }
+    .geo-row label { color: var(--ink); font-size: 12px; font-weight: 760; }
+    .select-wrap { position: relative; }
+    select { width: 100%; min-height: 46px; appearance: none; padding: 10px 42px 10px 13px; border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--ink); }
+    .select-wrap::after { position: absolute; top: 12px; right: 15px; color: var(--green); content: "⌄"; font-size: 20px; pointer-events: none; }
+    .results { margin-top: 31px; }
+    .results-head { display: flex; align-items: end; justify-content: space-between; gap: 12px; padding-bottom: 13px; border-bottom: 1px solid var(--line); }
+    .result-label { margin: 0 0 4px; color: var(--green); font-size: 10px; font-weight: 850; letter-spacing: .14em; text-transform: uppercase; }
+    .results-head h2 { font-size: 25px; }
+    .result-count { flex: 0 0 auto; color: var(--muted); font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .cards { display: grid; gap: 10px; margin-top: 13px; }
+    .lead-card { padding: 16px; border: 1px solid var(--line); border-radius: 13px; background: var(--surface); }
+    .card-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 7px 12px; margin-bottom: 9px; }
+    .source { color: var(--muted); font-size: 11px; font-weight: 700; }
+    .deadline { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 999px; background: var(--mint); color: var(--green-dark); font-size: 10px; font-weight: 800; }
+    .deadline::before { width: 5px; height: 5px; border-radius: 50%; background: currentColor; content: ""; }
+    .deadline.no-date { background: #f0f2ee; color: #617068; }
+    .lead-title { margin: 0; font-size: 16px; font-weight: 760; line-height: 1.32; overflow-wrap: anywhere; }
+    .lead-title a { text-decoration: none; text-decoration-color: #9bcdb7; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+    .lead-title a:hover { color: var(--green-dark); text-decoration: underline; }
+    .lead-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+    .meta-pill { padding: 4px 8px; border-radius: 6px; background: #f0f3ef; color: #4e6259; font-size: 10px; font-weight: 700; }
+    .unknown-section { margin-top: 33px; }
+    .unknown-banner { padding: 16px; border: 1px solid #efdcb9; border-radius: 14px; background: var(--amber-soft); }
+    .unknown-banner .section-kicker { color: var(--amber); }
+    .unknown-banner .section-note { color: #785b37; }
+    .unknown-section .cards { margin-top: 11px; }
+    .unknown-section .lead-card { border-color: #efe4d1; }
+    .empty-state { margin: 14px 0 0; padding: 18px; border: 1px dashed var(--line); border-radius: 12px; color: var(--muted); font-size: 13px; }
+    .load-state { margin: 20px 0; padding: 15px; border-radius: 12px; background: #fff; color: var(--muted); font-size: 13px; }
+    [hidden] { display: none !important; }
+    footer { padding: 19px 0 30px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; }
+    footer a { color: var(--green-dark); font-weight: 700; text-decoration: none; }
+
+    @media (min-width: 620px) {
+      .shell { width: min(100% - 48px, 1000px); }
+      .intro { padding: 58px 0 61px; }
+      main { padding-top: 38px; }
+      .matcher { padding: 28px; }
+      .persona-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+      .geo-row { flex-direction: row; align-items: center; }
+      .geo-row label { width: 112px; flex: 0 0 auto; }
+      .select-wrap { width: min(100%, 300px); }
+      .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .lead-card { padding: 17px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to opportunities</a>
+  <header class="masthead">
+    <div class="shell topbar">
+      <a class="brand" href="./index.html" aria-label="FundRadar EA home"><span class="brand-mark" aria-hidden="true">F</span><span>FundRadar <small>EA</small></span></a>
+      <a class="back-link" href="./index.html">Full feed <span aria-hidden="true">↗</span></a>
+    </div>
+    <div class="intro">
+      <div class="shell intro-inner">
+        <span class="eyebrow">East Africa · opportunity matcher</span>
+        <h1>Find the calls<br>that fit <em>you.</em></h1>
+        <p class="intro-copy">Choose who you’re applying as. We’ll bring the relevant open opportunities to the top — and keep unclear calls visible so you can check their source.</p>
+        <div class="feed-facts" id="feed-facts" aria-live="polite"><span>Loading live opportunities…</span></div>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="shell">
+    <div class="load-state" id="load-state" role="status">Loading today’s open calls…</div>
+    <section class="matcher" id="matcher" aria-labelledby="matcher-title" hidden>
+      <p class="section-kicker">Step 1 · Your applicant type</p>
+      <h2 id="matcher-title">Who are you applying as?</h2>
+      <p class="section-note">Pick one to see calls tagged for that kind of applicant.</p>
+      <div class="persona-grid" id="persona-options" role="group" aria-label="Choose your applicant type"></div>
+      <div class="geo-row">
+        <label for="country-filter">Narrow by country <span aria-hidden="true">(optional)</span></label>
+        <div class="select-wrap"><select id="country-filter"><option value="all">All countries</option></select></div>
+      </div>
+    </section>
+
+    <section class="results" id="results" aria-labelledby="matches-title" hidden>
+      <div class="results-head">
+        <div><p class="result-label">Matched opportunities</p><h2 id="matches-title">For everyone</h2></div>
+        <span class="result-count" id="match-count"></span>
+      </div>
+      <div class="cards" id="match-cards"></div>
+      <p class="empty-state" id="match-empty" hidden></p>
+    </section>
+
+    <section class="unknown-section" id="unknown-section" aria-labelledby="unknown-title" hidden>
+      <div class="unknown-banner">
+        <p class="section-kicker">Worth checking · eligibility not labelled</p>
+        <h2 id="unknown-title">Unknown eligibility</h2>
+        <p class="section-note">These calls don’t clearly name who can apply in the available details. Open the source and confirm before spending time on an application.</p>
+      </div>
+      <div class="cards" id="unknown-cards"></div>
+    </section>
+
+    <div class="load-state" id="load-error" role="alert" hidden>We couldn’t load the live list. Please check your connection and refresh the page.</div>
+  </main>
+
+  <footer><div class="shell">Eligibility labels are a guide, not a guarantee. Confirm requirements and deadlines with each original source. <a href="./index.html">Browse the full FundRadar feed</a>.</div></footer>
+
+  <script>
+    (function () {
+      'use strict';
+
+      var personas = [
+        { value: 'individual/fellow', label: 'Individual', hint: 'People & fellows' },
+        { value: 'NGO', label: 'NGO', hint: 'Nonprofits & CSOs' },
+        { value: 'firm/consultancy', label: 'Business', hint: 'Firms & consultants' },
+        { value: 'school/institution', label: 'School', hint: 'Schools & institutions' },
+        { value: 'university staff', label: 'University researcher', hint: 'University staff' },
+        { value: 'government', label: 'Government', hint: 'Public institutions' },
+        { value: 'all', label: 'Show everything', hint: 'All labelled calls' }
+      ];
+      var profileKey = 'fundradar-for-you-profile';
+      var countryKey = 'fundradar-for-you-country';
+      var options = document.getElementById('persona-options');
+      var countrySelect = document.getElementById('country-filter');
+      var matcher = document.getElementById('matcher');
+      var results = document.getElementById('results');
+      var loadState = document.getElementById('load-state');
+      var loadError = document.getElementById('load-error');
+      var state = { profile: readPreference(profileKey, 'all'), country: readPreference(countryKey, 'all') };
+      var dataset;
+
+      if (!personas.some(function (profile) { return profile.value === state.profile; })) state.profile = 'all';
+
+      function readPreference(key, fallback) {
+        try { return window.localStorage.getItem(key) || fallback; } catch (error) { return fallback; }
+      }
+
+      function savePreference(key, value) {
+        try { window.localStorage.setItem(key, value); } catch (error) {}
+      }
+
+      function safeCount(value) {
+        return new Intl.NumberFormat('en').format(value);
+      }
+
+      function profileCount(profile) {
+        if (profile === 'all') return dataset.leads.filter(function (lead) { return lead.applicant !== 'unknown'; }).length;
+        return dataset.leads.filter(function (lead) { return lead.applicant === profile; }).length;
+      }
+
+      function makeProfileButtons() {
+        personas.forEach(function (profile) {
+          var button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'persona';
+          button.dataset.profile = profile.value;
+          button.setAttribute('aria-pressed', String(state.profile === profile.value));
+          var top = document.createElement('span');
+          top.className = 'persona-top';
+          var name = document.createElement('span');
+          name.className = 'persona-name';
+          name.textContent = profile.label;
+          var count = document.createElement('span');
+          count.className = 'persona-count';
+          count.textContent = safeCount(profileCount(profile.value));
+          count.setAttribute('aria-label', safeCount(profileCount(profile.value)) + ' live opportunities');
+          var hint = document.createElement('span');
+          hint.className = 'persona-hint';
+          hint.textContent = profile.hint;
+          top.append(name, count);
+          button.append(top, hint);
+          button.addEventListener('click', function () {
+            state.profile = profile.value;
+            savePreference(profileKey, state.profile);
+            updateButtons();
+            render();
+          });
+          options.appendChild(button);
+        });
+      }
+
+      function updateButtons() {
+        Array.prototype.forEach.call(options.querySelectorAll('.persona'), function (button) {
+          button.setAttribute('aria-pressed', String(button.dataset.profile === state.profile));
+        });
+      }
+
+      function makeCountryOptions() {
+        var countries = new Set();
+        dataset.leads.forEach(function (lead) {
+          (Array.isArray(lead.countries) ? lead.countries : []).forEach(function (name) {
+            var value = String(name || '').trim();
+            if (value) countries.add(value);
+          });
+        });
+        Array.from(countries).sort(function (a, b) { return a.localeCompare(b); }).forEach(function (country) {
+          var option = document.createElement('option');
+          option.value = country;
+          option.textContent = country;
+          countrySelect.appendChild(option);
+        });
+        if (Array.from(countrySelect.options).some(function (option) { return option.value === state.country; })) {
+          countrySelect.value = state.country;
+        } else {
+          state.country = 'all';
+        }
+        countrySelect.addEventListener('change', function () {
+          state.country = countrySelect.value;
+          savePreference(countryKey, state.country);
+          render();
+        });
+      }
+
+      function dateTime(date) {
+        return new Date(date + 'T00:00:00');
+      }
+
+      function deadlineText(value) {
+        if (!value) return { label: 'Deadline not listed', noDate: true };
+        var date = dateTime(value);
+        if (Number.isNaN(date.getTime())) return { label: 'Deadline not listed', noDate: true };
+        var days = Math.round((date.getTime() - new Date(new Date().toDateString()).getTime()) / 86400000);
+        var relative = days === 0 ? 'Due today' : days === 1 ? '1 day left' : days > 1 ? days + ' days left' : '';
+        var formatted = new Intl.DateTimeFormat('en', { day: 'numeric', month: 'short', year: 'numeric' }).format(date);
+        return { label: relative ? relative + ' · ' + formatted : formatted, noDate: false };
+      }
+
+      function createCard(lead) {
+        var card = document.createElement('article');
+        card.className = 'lead-card';
+        card.dataset.leadId = lead.id;
+        var top = document.createElement('div');
+        top.className = 'card-top';
+        var source = document.createElement('span');
+        source.className = 'source';
+        source.textContent = lead.source || 'FundRadar source';
+        var deadline = document.createElement('span');
+        var due = deadlineText(lead.deadline);
+        deadline.className = 'deadline' + (due.noDate ? ' no-date' : '');
+        deadline.textContent = due.label;
+        top.append(source, deadline);
+
+        var heading = document.createElement('h3');
+        heading.className = 'lead-title';
+        var link;
+        try {
+          var parsedLink = new URL(lead.link, window.location.href);
+          if (parsedLink.protocol === 'https:' || parsedLink.protocol === 'http:') {
+            link = document.createElement('a');
+            link.href = parsedLink.href;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+          }
+        } catch (error) {}
+        if (link) {
+          link.textContent = lead.title || 'Untitled opportunity';
+          heading.appendChild(link);
+        } else {
+          heading.textContent = lead.title || 'Untitled opportunity';
+        }
+
+        var meta = document.createElement('div');
+        meta.className = 'lead-meta';
+        (Array.isArray(lead.countries) ? lead.countries : []).forEach(function (country) {
+          var pill = document.createElement('span');
+          pill.className = 'meta-pill';
+          pill.textContent = country;
+          meta.appendChild(pill);
+        });
+        card.append(top, heading);
+        if (meta.childElementCount) card.appendChild(meta);
+        return card;
+      }
+
+      function currentCountryMatches(lead) {
+        if (state.country === 'all') return true;
+        return Array.isArray(lead.countries) && lead.countries.indexOf(state.country) !== -1;
+      }
+
+      function nearestDeadline(a, b) {
+        if (!a.deadline && !b.deadline) return String(a.title).localeCompare(String(b.title));
+        if (!a.deadline) return 1;
+        if (!b.deadline) return -1;
+        return String(a.deadline).localeCompare(String(b.deadline)) || String(a.title).localeCompare(String(b.title));
+      }
+
+      function showCards(container, empty, leads, message) {
+        container.replaceChildren();
+        leads.forEach(function (lead) { container.appendChild(createCard(lead)); });
+        empty.hidden = leads.length > 0;
+        empty.textContent = message;
+      }
+
+      function render() {
+        var matched = dataset.leads.filter(function (lead) {
+          return lead.applicant !== 'unknown' && (state.profile === 'all' || lead.applicant === state.profile) && currentCountryMatches(lead);
+        }).sort(nearestDeadline);
+        var unknown = dataset.leads.filter(function (lead) {
+          return lead.applicant === 'unknown' && currentCountryMatches(lead);
+        }).sort(nearestDeadline);
+        var profile = personas.find(function (item) { return item.value === state.profile; });
+        document.getElementById('matches-title').textContent = state.profile === 'all' ? 'For every applicant type' : 'For ' + (profile ? profile.label : 'you');
+        document.getElementById('match-count').textContent = safeCount(matched.length) + (matched.length === 1 ? ' match' : ' matches');
+        showCards(document.getElementById('match-cards'), document.getElementById('match-empty'), matched,
+          'No labelled calls match these filters yet. Try Show everything or check the unclassified calls below.');
+        document.getElementById('unknown-section').hidden = unknown.length === 0;
+        var unknownCards = document.getElementById('unknown-cards');
+        unknownCards.replaceChildren();
+        unknown.forEach(function (lead) { unknownCards.appendChild(createCard(lead)); });
+      }
+
+      fetch('./for-you.json', { cache: 'no-cache' })
+        .then(function (response) {
+          if (!response.ok) throw new Error('Could not load opportunity data');
+          return response.json();
+        })
+        .then(function (data) {
+          if (!data || !Array.isArray(data.leads)) throw new Error('Opportunity data is not available');
+          dataset = data;
+          loadState.hidden = true;
+          matcher.hidden = false;
+          results.hidden = false;
+          var total = document.createElement('span');
+          var totalValue = document.createElement('strong');
+          totalValue.textContent = safeCount(Number(data.total) || data.leads.length);
+          total.append(totalValue, document.createTextNode(' open leads'));
+          var updated = document.createElement('span');
+          var generated = data.generatedAt ? new Date(data.generatedAt) : null;
+          updated.textContent = generated && !Number.isNaN(generated.getTime())
+            ? 'Updated ' + new Intl.DateTimeFormat('en', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(generated)
+            : 'Live FundRadar data';
+          document.getElementById('feed-facts').replaceChildren(total, updated);
+          makeProfileButtons();
+          makeCountryOptions();
+          render();
+        })
+        .catch(function () {
+          loadState.hidden = true;
+          loadError.hidden = false;
+        });
+    }());
+  </script>
+</body>
+</html>
