@@ -7,13 +7,48 @@ import { fetchRetry } from '../http.js';
 const BASE = 'https://egpuganda.go.ug';
 const PAGES = ['/bid-notices', '/bid-notices/consultancy', '/bid-notices/none-consultancy', '/bid-notices/supplies', '/bid-notices/works'];
 
+export function isTruncatedSubject(subject) {
+  return /(?:\.{3}|…)\s*$/u.test(String(subject ?? '').trim());
+}
+
+export function parseFullSubject(html) {
+  const tables = String(html ?? '').match(/<table\b[^>]*>[\s\S]*?<\/table>/gi) ?? [];
+  for (const table of tables) {
+    const rows = [...table.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)];
+    const header = rows.find((row) => /<th\b/i.test(row[1]));
+    if (!header) continue;
+
+    const headings = [...header[1].matchAll(/<th\b[^>]*>([\s\S]*?)<\/th>/gi)]
+      .map((match) => stripHtml(match[1]).toLowerCase());
+    const subjectColumn = headings.findIndex((heading) => /subject\s+of\s+procurement/.test(heading));
+    if (subjectColumn < 0) continue;
+
+    for (const row of rows) {
+      if (/<th\b/i.test(row[1])) continue;
+      const cells = [...row[1].matchAll(/<td\b[^>]*>([\s\S]*?)<\/td>/gi)];
+      const subjectHtml = cells[subjectColumn]?.[1];
+      if (!subjectHtml) continue;
+      const subject = stripHtml(subjectHtml
+        .replace(/&#0*39;|&#x0*27;|&apos;/gi, "'")
+        .replace(/&quot;/gi, '"'));
+      if (subject) return subject;
+    }
+  }
+  return null;
+}
+
+export function completeSubject(subject, expandedSubject = null) {
+  const original = String(subject ?? '').trim();
+  if (!original) return null;
+  const complete = isTruncatedSubject(original) ? String(expandedSubject ?? '').trim() : original;
+  return complete && !isTruncatedSubject(complete) ? complete : null;
+}
+
 async function fetchFullSubject(noticeUrl) {
   try {
     const res = await fetchRetry(noticeUrl, {}, { timeoutMs: 60000 });
     if (!res.ok) return null;
-    const text = stripHtml(await res.text()).replace(/\s+/g, ' ');
-    const m = text.match(/Subject of Procurement\s+([\s\S]*?)\s+Procurement Method/);
-    return m ? m[1].trim() : null;
+    return parseFullSubject(await res.text());
   } catch {
     return null;
   }
@@ -57,15 +92,16 @@ export async function fetchUgandaEgp() {
 
       seen.add(noticeId);
 
-      // Fetch full subject if truncated
       const fullUrl = noticeUrl.startsWith('http') ? noticeUrl : `${BASE}${noticeUrl}`;
-      const fullSubject = subject.endsWith('...') ? await fetchFullSubject(fullUrl) : null;
+      const fullSubject = isTruncatedSubject(subject) ? await fetchFullSubject(fullUrl) : null;
+      const title = completeSubject(subject, fullSubject);
+      if (!title) continue;
 
       out.push(enrich({
         id: makeId('uganda-egp', noticeId),
         source: 'Uganda eGP (PPDA)',
         funder: 'Government of Uganda',
-        title: (fullSubject || subject).slice(0, 300),
+        title,
         url: fullUrl,
         summary: `${entity} — ${type} tender`,
         type: 'tender',

@@ -11,6 +11,8 @@ import { fetchKenyaTenders } from './sources/kenya_tenders.js';
 import { fetchWebRadar } from './sources/webradar.js';
 import { fetchAecf } from './sources/aecf.js';
 import { fetchReliefWeb } from './sources/reliefweb.js';
+import { fetchGovUkFunding } from './sources/govuk_funding.js';
+import { fetchGrantsGov } from './sources/grants_gov.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SUMMARY_PATH = process.env.SUMMARY_PATH || path.join(ROOT, '.run-summary.json');
@@ -27,6 +29,8 @@ const SOURCES = [
   ['Web Radar', fetchWebRadar],
   ['AECF (Africa Enterprise Challenge Fund)', fetchAecf],
   ['ReliefWeb', fetchReliefWeb],
+  ['UK International Development Funding Finder', fetchGovUkFunding],
+  ['Grants.gov', fetchGrantsGov],
 ];
 
 const db = openDb();

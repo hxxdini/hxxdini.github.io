@@ -16,7 +16,7 @@ sources (APIs/RSS/scrapers) → normalize + classify → SQLite → weekly diges
 
 Each opportunity receives a deterministic `applicant_type` label from its title, summary and eligibility tags. The `school_eligible_uganda` flag is set only when a funding call explicitly names schools or educational institutions as applicants and the available text shows Uganda or a broad regional/global scope. Tenders, fellowships and prizes are not flagged as school grants. Records without clear applicant evidence remain `unknown`; confirm all eligibility against the primary source.
 
-The digest places matching calls in a `For schools in Uganda` section, and the dashboard has a matching filter. The curated labeled sample and rule checks run with `npm test`.
+The main feed includes opportunities for all applicant types; school eligibility is an additional label, digest section, and dashboard filter—not a gate on the feed. The digest places matching calls in a `For schools in Uganda` section, and the dashboard has a matching filter. Applicant classification, source-adapter, and title-completeness regression tests run with `npm test`.
 
 ## Sources (v1)
 
@@ -25,10 +25,12 @@ The digest places matching calls in a `For schools in Uganda` section, and the d
 | World Bank procurement | JSON API v2 | filtered to EA countries, live deadlines |
 | EU Funding & Tenders (SEDIA) | multipart search API | open + forthcoming calls, EN |
 | UNGM (all UN agencies) | POST search, HTML rows | filtered to EA countries |
-| Uganda eGP (PPDA) | HTML tables, 4 tabs | micro-procurement windows are ~1 day; mostly empty on weekends |
+| Uganda eGP (PPDA) | HTML tables, 4 tabs | expands ellipsis-truncated tender subjects from the notice detail table; micro-procurement windows are ~1 day |
 | Kenya PPIP (tenders.go.ke) | JSON API | aggressive rate limiting — slow paging + 429 retries |
 | Web Radar | Google News RSS + Bing RSS, 7 queries | broad discovery; **unverified leads**, labeled as such |
 | AECF (Africa Enterprise Challenge Fund) | HTML, single curated page | low volume (single digits) but current and directly EA-relevant; no published deadlines (rolling windows) |
+| UK International Development Funding Finder | GOV.UK Atom feed | open and upcoming international-development calls, filtered for EA or broad Africa/global scope |
+| Grants.gov | public search and opportunity-detail APIs | posted federal grant opportunities mentioning EA countries or Africa; eligibility varies by notice |
 | fundsforNGOs | RSS | feed capped at 1 item by site — needs page scraper (backlog) |
 | Opportunity Desk | RSS | fellowships/prizes |
 
