@@ -15,7 +15,8 @@ const today = new Date().toISOString().slice(0, 10);
 const db = openDb();
 
 const rows = db.prepare(`
-  SELECT id, title, url, funder, source, type, deadline, countries, sectors, amount, first_seen
+  SELECT id, title, url, funder, source, type, deadline, countries, sectors, amount, first_seen,
+         applicant_type, school_eligible_uganda
   FROM opportunities
   WHERE ea_relevant = 1
     AND (deadline >= ? OR (deadline IS NULL AND first_seen >= datetime('now', '-14 days')))
@@ -26,7 +27,8 @@ const items = rows.map((r) => ({
   id: r.id, t: r.title, u: r.url, f: r.funder ?? '', s: r.source,
   y: r.type === 'grant' ? 'grant' : r.type === 'tender' ? 'tender' : 'fellowship',
   d: r.deadline, c: JSON.parse(r.countries ?? '[]'), k: JSON.parse(r.sectors ?? '[]'),
-  a: r.amount, n: r.first_seen.slice(0, 10),
+  a: r.amount, n: r.first_seen.slice(0, 10), p: r.applicant_type ?? 'unknown',
+  g: r.school_eligible_uganda === 1,
 }));
 
 const nSources = db.prepare('SELECT COUNT(DISTINCT source) c FROM opportunities').get().c;
@@ -407,7 +409,7 @@ const html = `<title>FundRadar EA — Funding &amp; Tender Intelligence</title>
   <div class="controls">
     <div class="search-wrap">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg>
-      <input type="search" id="q" placeholder="Search title, funder, sector… (press / to focus)" aria-label="Search opportunities">
+      <input type="search" id="q" placeholder="Search title, funder, sector, applicant… (press / to focus)" aria-label="Search opportunities">
     </div>
     <div class="tabs" role="group" aria-label="Filter by type">
       <button data-type="all" aria-pressed="true">All</button>
@@ -421,6 +423,7 @@ const html = `<title>FundRadar EA — Funding &amp; Tender Intelligence</title>
       <option value="new_desc">Newest discovered</option>
     </select>
     <button class="toggle" id="newToggle" aria-pressed="false">&#10022; New (<span id="newCount">0</span>)</button>
+    <button class="toggle" id="schoolToggle" aria-pressed="false" aria-label="Filter for schools eligible in Uganda">For schools in Uganda (<span id="schoolCount">0</span>)</button>
     <button class="toggle" id="shortlistToggle" aria-pressed="false">&#9734; Shortlist (<span id="shortlistCount">0</span>)</button>
     <button class="toggle filter-btn" id="filterBtn" aria-expanded="false" aria-controls="sidebar"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="7" x2="20" y2="7"></line><line x1="7" y1="12" x2="17" y2="12"></line><line x1="10" y1="17" x2="14" y2="17"></line></svg> Filters<span class="filter-badge" id="filterBadge" hidden></span></button>
   </div>
@@ -466,6 +469,8 @@ const html = `<title>FundRadar EA — Funding &amp; Tender Intelligence</title>
   var sortSel = document.getElementById('sort');
   var newBtn = document.getElementById('newToggle');
   var newCountEl = document.getElementById('newCount');
+  var schoolBtn = document.getElementById('schoolToggle');
+  var schoolCountEl = document.getElementById('schoolCount');
   var shortlistBtn = document.getElementById('shortlistToggle');
   var shortlistCountEl = document.getElementById('shortlistCount');
   var countryChipsEl = document.getElementById('countryChips');
@@ -485,8 +490,9 @@ const html = `<title>FundRadar EA — Funding &amp; Tender Intelligence</title>
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   };
 
-  var state = { type: 'all', country: 'all', sector: 'all', query: '', sort: 'deadline_asc', shortlistOnly: false, newOnly: false };
+  var state = { type: 'all', country: 'all', sector: 'all', query: '', sort: 'deadline_asc', shortlistOnly: false, newOnly: false, schoolOnly: false };
   newCountEl.textContent = DATA.filter(function (o) { return o.n === BUILD_DATE; }).length;
+  schoolCountEl.textContent = DATA.filter(function (o) { return o.g; }).length;
   var current = [];
 
   // ---------- shortlist (localStorage) ----------
@@ -528,7 +534,7 @@ const html = `<title>FundRadar EA — Funding &amp; Tender Intelligence</title>
   drawerClose.addEventListener('click', closeDrawer);
   sidebarBackdrop.addEventListener('click', closeDrawer);
   function updateFilterBadge() {
-    var n = (state.country !== 'all' ? 1 : 0) + (state.sector !== 'all' ? 1 : 0);
+    var n = (state.country !== 'all' ? 1 : 0) + (state.sector !== 'all' ? 1 : 0) + (state.schoolOnly ? 1 : 0);
     if (n) { filterBadge.textContent = n; filterBadge.hidden = false; }
     else { filterBadge.hidden = true; }
   }
@@ -626,9 +632,10 @@ const html = `<title>FundRadar EA — Funding &amp; Tender Intelligence</title>
     if (state.country !== 'all' && state.country !== 'regional' && !o.c.some(function (c) { return c.indexOf(state.country) === 0; })) return false;
     if (state.sector !== 'all' && o.k.indexOf(state.sector) === -1) return false;
     if (state.newOnly && o.n !== BUILD_DATE) return false;
+    if (state.schoolOnly && !o.g) return false;
     if (state.shortlistOnly && !shortlist.has(o.id)) return false;
     if (state.query) {
-      var hay = (o.t + ' ' + o.f + ' ' + o.s + ' ' + o.k.join(' ') + ' ' + o.c.join(' ')).toLowerCase();
+      var hay = (o.t + ' ' + o.f + ' ' + o.s + ' ' + o.k.join(' ') + ' ' + o.c.join(' ') + ' ' + o.p).toLowerCase();
       var words = state.query.toLowerCase().split(/\s+/);
       for (var i = 0; i < words.length; i++) { if (hay.indexOf(words[i]) === -1) return false; }
     }
@@ -647,7 +654,7 @@ const html = `<title>FundRadar EA — Funding &amp; Tender Intelligence</title>
       cls = dl <= 7 ? ' crit' : dl <= 21 ? ' warn' : '';
       when = '<span class="rdate">' + o.d + '</span><span class="rleft">' + (dl <= 0 ? 'today' : dl + 'd left') + '</span>';
     }
-    var meta = [o.f, o.c.map(function (c) { return c.split(',')[0]; }).join(', '), o.k[0]].filter(Boolean).join(' · ');
+    var meta = [o.f, o.c.map(function (c) { return c.split(',')[0]; }).join(', '), o.k[0], o.p !== 'unknown' ? 'Applicant: ' + o.p : null, o.g ? 'School eligible · Uganda' : null].filter(Boolean).join(' · ');
     var isNew = o.n === BUILD_DATE;
     var starred = shortlist.has(o.id);
     return '<div class="row" role="listitem" aria-posinset="' + (idx + 1) + '" aria-setsize="' + current.length + '">' +
@@ -664,7 +671,9 @@ const html = `<title>FundRadar EA — Funding &amp; Tender Intelligence</title>
 
   function renderList() {
     if (!current.length) {
-      pool.innerHTML = '<p class="empty">Nothing matches — widen the filters.</p>';
+      pool.innerHTML = state.schoolOnly && !DATA.some(function (o) { return o.g; })
+        ? '<p class="empty">No current opportunities are confidently tagged as open to Uganda schools. Check the full call text and revisit after the next pipeline run.</p>'
+        : '<p class="empty">Nothing matches — widen the filters.</p>';
       return;
     }
     var html = '';
@@ -697,6 +706,11 @@ const html = `<title>FundRadar EA — Funding &amp; Tender Intelligence</title>
   newBtn.addEventListener('click', function () {
     state.newOnly = !state.newOnly;
     newBtn.setAttribute('aria-pressed', state.newOnly);
+    refilter();
+  });
+  schoolBtn.addEventListener('click', function () {
+    state.schoolOnly = !state.schoolOnly;
+    schoolBtn.setAttribute('aria-pressed', state.schoolOnly);
     refilter();
   });
   shortlistBtn.addEventListener('click', function () {

@@ -6,7 +6,8 @@
   "scripts": {
     "pipeline": "node src/pipeline.js",
     "digest": "node src/digest.js",
-    "stats": "node src/stats.js"
+    "stats": "node src/stats.js",
+    "test": "node tests/applicant-classifier.test.js"
   },
   "dependencies": {
     "fast-xml-parser": "^4.5.0"
