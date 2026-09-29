@@ -39,7 +39,8 @@ export async function fetchRetry(url, options = {}, { retries = 3, backoffMs = 2
 async function curlFetch(url, options, timeoutMs) {
   const dir = await mkdtemp(path.join(tmpdir(), 'fundradar-'));
   const bodyFile = path.join(dir, 'body');
-  const args = ['-sS', '--max-time', String(Math.ceil(timeoutMs / 1000)), '-o', bodyFile, '-w', '%{http_code}'];
+  const headerFile = path.join(dir, 'headers');
+  const args = ['-sS', '--max-time', String(Math.ceil(timeoutMs / 1000)), '-D', headerFile, '-o', bodyFile, '-w', '%{http_code}'];
 
   args.push('-A', options.headers?.['User-Agent'] ?? 'Mozilla/5.0 (compatible; FundRadar/0.1)');
   if (options.method && options.method !== 'GET') args.push('-X', options.method);
@@ -60,7 +61,10 @@ async function curlFetch(url, options, timeoutMs) {
     const status = Number(stdout.trim());
     if (!status) throw new Error(`curl gave no status for ${url}`);
     const raw = await readFile(bodyFile, 'utf8').catch(() => '');
-    return makeRes(status, raw);
+    const headers = await readFile(headerFile, 'utf8').catch(() => '');
+    const lastResponse = headers.split(/\r?\n\r?\n/).filter((block) => /^HTTP\//.test(block)).at(-1) ?? '';
+    const cookies = [...lastResponse.matchAll(/^set-cookie:\s*([^\r\n]+)/gim)].map((match) => match[1]);
+    return makeRes(status, raw, cookies);
   } finally {
     rm(dir, { recursive: true, force: true }).catch(() => {});
   }
@@ -78,13 +82,14 @@ async function nativeFetch(url, options, timeoutMs) {
   }
   const res = await fetch(url, opts);
   const raw = await res.text();
-  return makeRes(res.status, raw);
+  return makeRes(res.status, raw, res.headers.getSetCookie());
 }
 
-function makeRes(status, raw) {
+function makeRes(status, raw, cookies = []) {
   return {
     status,
     ok: status >= 200 && status < 300,
+    cookies,
     text: async () => raw,
     json: async () => JSON.parse(raw),
   };
