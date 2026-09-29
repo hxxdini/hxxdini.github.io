@@ -28,6 +28,10 @@ jobs:
           node src/site.js
       - name: Export leads for the applicant finder
         run: npm run export:for-you
+      - name: Generate search pages and verify counts
+        run: |
+          npm run seo
+          npm test
       - name: Commit updated data
         run: |
           git config user.name "fundradar-bot"

@@ -11,6 +11,7 @@ sources (APIs/RSS/scrapers) → normalize + classify → SQLite → weekly diges
 - `npm run pipeline` — fetch all sources, upsert into `data/fundradar.db`
 - `npm run digest` — generate `out/digest-YYYY-MM-DD.md` from live EA-relevant records (prepends `out/editors-note.md` if present)
 - `npm run stats` — database breakdown by source/type/country
+- `npm run export:for-you && npm run seo` — regenerate the finder data, one static page per live lead, audience/country landing pages, sitemap and robots file. The scheduled workflow does this after each ingestion run. Expired pages are retained with `noindex` and excluded from the sitemap. Submit `https://hxxdini.github.io/sitemap.xml` in Google Search Console after verifying site ownership.
 
 ## Applicant signals
 

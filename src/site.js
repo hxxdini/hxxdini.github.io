@@ -667,9 +667,9 @@ const html = `<title>FundRadar EA — Funding &amp; Tender Intelligence</title>
       '<button class="star' + (starred ? ' active' : '') + '" data-id="' + esc(o.id) + '" aria-pressed="' + starred + '" aria-label="Add to shortlist">' + (starred ? '★' : '☆') + '</button>' +
       '<div class="row-main">' +
         '<div class="row-title-line"><span class="tag-type">' + o.y + '</span>' +
-        '<a class="row-title" href="' + esc(o.u) + '" target="_blank" rel="noopener">' + esc(o.t) + '</a>' +
+        '<a class="row-title" href="./lead/' + encodeURIComponent(o.id) + '.html">' + esc(o.t) + '</a>' +
         (isNew ? '<span class="badge-new">New</span>' : '') + '</div>' +
-        '<div class="row-meta" title="' + esc(meta + ' · via ' + o.s) + '">' + esc(meta) + (o.a ? ' · <span class="amt">' + esc(o.a) + '</span>' : '') + ' · via ' + esc(o.s) + '</div>' +
+        '<div class="row-meta" title="' + esc(meta + ' · via ' + o.s) + '">' + esc(meta) + (o.a ? ' · <span class="amt">' + esc(o.a) + '</span>' : '') + ' · via ' + esc(o.s) + (o.u ? ' · <a href="' + esc(o.u) + '" target="_blank" rel="noopener noreferrer">Original source ↗</a>' : '') + '</div>' +
       '</div>' +
       '<div class="row-when' + cls + '">' + when + '</div>' +
     '</div>';

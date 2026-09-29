@@ -8,7 +8,8 @@
     "digest": "node src/digest.js",
     "stats": "node src/stats.js",
     "export:for-you": "node src/export-for-you.js",
-    "test": "node tests/applicant-classifier.test.js && node tests/source-adapters.test.js && node tests/uganda-egp-title.test.js"
+    "seo": "node src/seo.js",
+    "test": "node tests/applicant-classifier.test.js && node tests/source-adapters.test.js && node tests/uganda-egp-title.test.js && node tests/seo.test.js"
   },
   "dependencies": {
     "fast-xml-parser": "^4.5.0"

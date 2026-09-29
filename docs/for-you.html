@@ -127,6 +127,7 @@
         <span class="eyebrow">East Africa · opportunity matcher</span>
         <h1>Find the calls<br>that fit <em>you.</em></h1>
         <p class="intro-copy">Choose who you’re applying as. We’ll bring the relevant open opportunities to the top — and keep unclear calls visible so you can check their source.</p>
+        <p><a class="back-link" href="./funding/index.html">Browse funding by country ↗</a></p>
         <div class="feed-facts" id="feed-facts" aria-live="polite"><span>Loading live opportunities…</span></div>
       </div>
     </div>
@@ -310,9 +311,7 @@
           var parsedLink = new URL(lead.link, window.location.href);
           if (parsedLink.protocol === 'https:' || parsedLink.protocol === 'http:') {
             link = document.createElement('a');
-            link.href = parsedLink.href;
-            link.target = '_blank';
-            link.rel = 'noopener noreferrer';
+            link.href = './lead/' + encodeURIComponent(lead.id) + '.html';
           }
         } catch (error) {}
         if (link) {
@@ -332,6 +331,15 @@
         });
         card.append(top, heading);
         if (meta.childElementCount) card.appendChild(meta);
+        if (link) {
+          var original = document.createElement('a');
+          original.href = parsedLink.href;
+          original.target = '_blank';
+          original.rel = 'noopener noreferrer';
+          original.textContent = 'Original source ↗';
+          original.className = 'source';
+          card.appendChild(original);
+        }
         return card;
       }
 
