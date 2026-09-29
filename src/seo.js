@@ -16,7 +16,7 @@ const kinds = { grant: 'Grants', tender: 'Tenders', loan: 'Loans', fellowship: '
 const singular = { grant: 'Grant', tender: 'Tender', loan: 'Loan', fellowship: 'Fellowship', prize: 'Prize' };
 
 function escapeHtml(value) {
-  return String(value ?? '').replace(/[&<>"']/g, (character) => ({
+  return String(value ?? '').replace(/\s+/g, ' ').trim().replace(/[&<>"']/g, (character) => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
   })[character]);
 }
