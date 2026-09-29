@@ -39,7 +39,7 @@ Dead/backlog: UNDP export feed (404 — UNGM covers UNDP notices), fundsforNGOs 
 
 ## Auto-update
 
-A GitHub Actions workflow (`.github/workflows/daily.yml`) runs the full pipeline **daily at 07:00 EAT**, regenerates the digest and site, and commits `data/` + `out/` back to the repo — the repo is the database, with full history of every change ("git scraping"). Trigger manually with `gh workflow run daily-pipeline`. GitHub runners also dodge the local sandbox's flaky DNS.
+The GitHub Actions workflow (`.github/workflows/pipeline.yml`) runs the pipeline every four hours, regenerates the digest, feed, applicant finder, lead pages, country/audience pages and sitemap, tests the output, and commits `data/`, `out/` and `docs/` to the repo. Trigger manually with `gh workflow run pipeline.yml`. The repo retains the database history; old lead pages stay available but become `noindex` and leave the sitemap when no longer current.
 
 ## Design decisions
 
