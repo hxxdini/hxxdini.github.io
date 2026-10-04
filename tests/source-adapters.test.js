@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { mapGovUkEntry, parseGovUkFundingFeed } from '../src/sources/govuk_funding.js';
 import { mapGrantOpportunity } from '../src/sources/grants_gov.js';
 import { mapGppNotice, financialYears } from '../src/sources/uganda_gpp.js';
+import { parseFeed, mapReliefWebJob, FEED_URL } from '../src/sources/reliefweb.js';
 
 const today = '2026-09-27';
 
@@ -103,4 +104,38 @@ assert.equal(mapGppNotice({ id: 3, title: 'Supply of chalk', deadline: '2026-10-
 assert.deepEqual(financialYears('2026-10-04'), ['2026-2027', '2025-2026']);
 assert.deepEqual(financialYears('2026-03-15'), ['2025-2026', '2024-2025']);
 
-console.log('Source adapter tests: GOV.UK feed, Grants.gov and Uganda GPP mapping passed');
+// ReliefWeb RSS: descriptions are entity-escaped HTML; a long one must not trip the
+// XML parser's entity-expansion limit.
+const longBody = '&lt;p&gt;Scope &amp;amp; terms&lt;/p&gt;'.repeat(400);
+const rwXml = `<?xml version="1.0" encoding="utf-8"?><rss version="2.0"><channel>
+  <item>
+    <title>National HLP Legal Associate</title>
+    <link>https://reliefweb.int/job/4232398/national-hlp-legal-associate</link>
+    <pubDate>Fri, 02 Oct 2026 12:43:15 +0000</pubDate>
+    <description>&lt;div class="tag country"&gt;Country: South Sudan&lt;/div&gt;
+      &lt;div class="tag source"&gt;Organization: CTG (Committed To Good)&lt;/div&gt;
+      &lt;div class="date closing"&gt;Closing date: 11 Oct 2026&lt;/div&gt;
+      &lt;p&gt;Overview of position&lt;/p&gt;${longBody}</description>
+  </item>
+  <item>
+    <title>Closed consultancy</title>
+    <link>https://reliefweb.int/job/1/closed</link>
+    <description>&lt;div class="tag country"&gt;Country: Kenya&lt;/div&gt;&lt;div class="date closing"&gt;Closing date: 1 Sep 2026&lt;/div&gt;</description>
+  </item>
+</channel></rss>`;
+const rwItems = parseFeed(rwXml);
+assert.equal(rwItems.length, 2);
+const rwJob = mapReliefWebJob(rwItems[0], today);
+assert.equal(rwJob.title, 'National HLP Legal Associate');
+assert.equal(rwJob.url, 'https://reliefweb.int/job/4232398/national-hlp-legal-associate');
+assert.equal(rwJob.funder, 'CTG (Committed To Good)');
+assert.equal(rwJob.deadline, '2026-10-11');
+assert.deepEqual(rwJob.countries, ['South Sudan']);
+assert.equal(rwJob.type, 'tender');
+assert.equal(rwJob.ea_relevant, true);
+assert.match(rwJob.summary, /^Overview of position Scope & terms/);
+assert.doesNotMatch(rwJob.summary, /Closing date|Organization:/);
+assert.equal(mapReliefWebJob(rwItems[1], today), null);
+assert.match(FEED_URL, /^https:\/\/reliefweb\.int\/jobs\/rss\.xml\?advanced-search=\(TY264\)_\(C240\./);
+
+console.log('Source adapter tests: GOV.UK feed, Grants.gov, Uganda GPP and ReliefWeb RSS mapping passed');
