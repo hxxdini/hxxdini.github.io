@@ -72,13 +72,26 @@ const stats = db.prepare(`
   FROM opportunities
 `).get();
 
+// Staleness watchdog: a source can rot silently (server outage, IP block) while
+// every individual run still "succeeds" — Kenya PPIP went dark for 2.5 days with
+// green CI before this existed. Flag any source whose newest last_seen is old.
+const STALE_HOURS = 48;
+const staleSources = db.prepare(`
+  SELECT source, MAX(last_seen) AS latest FROM opportunities GROUP BY source
+`).all()
+  .map((r) => ({ source: r.source, hoursSince: (Date.now() - new Date(r.latest).getTime()) / 3600000 }))
+  .filter((r) => r.hoursSince > STALE_HOURS)
+  .map((r) => ({ source: r.source, days: Number((r.hoursSince / 24).toFixed(1)) }));
+
 console.log(`\nRun complete: ${totalSeen} records processed, ${totalNew} new.`);
 console.log(`Database: ${stats.total} opportunities | ${stats.ea} EA-relevant | ${stats.live} live on site.`);
+for (const s of staleSources) console.log(`STALE: ${s.source} — no confirmed data for ${s.days} days`);
 
 fs.writeFileSync(SUMMARY_PATH, JSON.stringify({
   ranAt: new Date().toISOString(),
   totalNew,
   totalSeen,
   perSource,
+  staleSources,
   db: { total: stats.total, ea: stats.ea, live: stats.live },
 }, null, 2));

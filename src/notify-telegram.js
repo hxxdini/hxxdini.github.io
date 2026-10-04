@@ -7,7 +7,7 @@ const SUMMARY_PATH = process.env.SUMMARY_PATH || path.join(ROOT, '.run-summary.j
 
 const { TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, RUN_URL, PAGES_OUTCOME } = process.env;
 
-if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
+if (!process.env.DRY_RUN && (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID)) {
   console.log('Telegram secrets not set — skipping notification.');
   process.exit(0);
 }
@@ -25,6 +25,7 @@ if (fs.existsSync(SUMMARY_PATH)) {
   const withNew = s.perSource.filter(x => !x.error && x.added > 0);
   if (withNew.length) lines.push('', ...withNew.map(x => `  +${x.added} ${x.name}`));
   if (failed.length) lines.push('', '⚠️ Failed sources:', ...failed.map(x => `  ${x.name}: ${x.error.slice(0, 120)}`));
+  if (s.staleSources?.length) lines.push('', '🕰 Stale (no fresh data >48h):', ...s.staleSources.map(x => `  ${x.source}: ${x.days}d`));
 } else {
   lines.push('⚠️ No run summary found — ingestion step likely crashed before writing results. Check the Actions log.');
 }
@@ -33,6 +34,11 @@ lines.push('', `Site deploy: ${icon(PAGES_OUTCOME)} ${PAGES_OUTCOME || 'unknown'
 if (RUN_URL) lines.push(RUN_URL);
 
 const text = lines.join('\n');
+
+if (process.env.DRY_RUN) {
+  console.log(text);
+  process.exit(0);
+}
 
 const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
   method: 'POST',

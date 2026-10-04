@@ -85,8 +85,9 @@ export async function fetchOpportunityDesk() {
       'Accept-Language': 'en-US,en;q=0.5',
     },
   });
-  // 403 is common when cloud IPs are blocked (Cloudflare); skip silently and retry next run
-  if (res.status === 403) return out;
+  // Cloudflare 403s cloud/CI IPs. Fail loudly — a silent empty return here made the
+  // source look healthy in run summaries while it went 6 days without fresh data.
+  if (res.status === 403) throw new Error('blocked (HTTP 403) — Cloudflare rejects this IP; data only refreshes from unblocked runs');
   if (!res.ok) throw new Error(`${url} HTTP ${res.status}`);
   const html = await res.text();
 
