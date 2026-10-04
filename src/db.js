@@ -72,8 +72,11 @@ export function upsertOpportunity(db, o) {
     ON CONFLICT(id) DO UPDATE SET
       last_seen = excluded.last_seen,
       title     = CASE WHEN excluded.title LIKE '%...' AND opportunities.title NOT LIKE '%...' THEN opportunities.title ELSE excluded.title END,
-      deadline  = COALESCE(excluded.deadline, opportunities.deadline),
-      summary   = COALESCE(excluded.summary, opportunities.summary),
+      -- A deadline and summary read from the full call text beat the feed's teaser.
+      deadline  = CASE WHEN opportunities.verify_status = 'deadline' THEN opportunities.deadline
+                       ELSE COALESCE(excluded.deadline, opportunities.deadline) END,
+      summary   = CASE WHEN opportunities.verified_at IS NOT NULL AND opportunities.summary IS NOT NULL THEN opportunities.summary
+                       ELSE COALESCE(excluded.summary, opportunities.summary) END,
       amount    = COALESCE(excluded.amount, opportunities.amount)
   `);
   const info = stmt.run(

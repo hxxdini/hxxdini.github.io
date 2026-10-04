@@ -14,7 +14,7 @@ import { fetchAecf } from './sources/aecf.js';
 import { fetchReliefWeb } from './sources/reliefweb.js';
 import { fetchGovUkFunding } from './sources/govuk_funding.js';
 import { fetchGrantsGov } from './sources/grants_gov.js';
-import { verifyFundsForNgos, isCallPost } from './sources/fundsforngos_verify.js';
+import { verifyFundsForNgos, verifyWebRadarFundsForNgos, isCallPost } from './sources/fundsforngos_verify.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SUMMARY_PATH = process.env.SUMMARY_PATH || path.join(ROOT, '.run-summary.json');
@@ -76,6 +76,18 @@ try {
   console.log(`${v.checked} checked, ${v.confirmed} deadlines confirmed${v.missing ? `, ${v.missing} not found` : ''}`);
 } catch (e) {
   perSource.push({ name: 'fundsforNGOs full-post check', fetched: 0, added: 0, error: e.message });
+  console.log(`FAILED: ${e.message}`);
+}
+
+// Web Radar picks up fundsforNGOs posts via Google News with only a headline;
+// match them to the post and read it the same way.
+process.stdout.write('→ Web Radar fundsforNGOs check ... ');
+try {
+  const v = await verifyWebRadarFundsForNgos(db);
+  perSource.push({ name: 'Web Radar fundsforNGOs check', fetched: v.checked, added: 0, confirmed: v.confirmed, error: null });
+  console.log(`${v.checked} checked, ${v.confirmed} deadlines confirmed${v.missing ? `, ${v.missing} not matched` : ''}`);
+} catch (e) {
+  perSource.push({ name: 'Web Radar fundsforNGOs check', fetched: 0, added: 0, error: e.message });
   console.log(`FAILED: ${e.message}`);
 }
 

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { parsePost, isCallPost, www2Link, postLinks } from '../src/sources/fundsforngos_verify.js';
+import { parsePost, isCallPost, www2Link, postLinks, titleMatches } from '../src/sources/fundsforngos_verify.js';
 
 // Shape of a www2 full article (trimmed from a real post).
 const article = `
@@ -53,5 +53,14 @@ assert.equal(isCallPost('https://www.fundsforngos.org/newsletter/30-fresh-global
 assert.equal(isCallPost('https://www.fundsforngos.org/how-to-write-a-proposal/x/'), false);
 
 assert.equal(postLinks('<a href="https://twitter.com/x">t</a><a href="mailto:a@b.c">m</a>').length, 0);
+
+// Web Radar headlines match their post by exact title (Google News adds " - fundsforNGOs").
+assert.equal(titleMatches('Call for Proposals: Uganda – TREES 4 KARAMOJA (T4K) Initiative - fundsforNGOs',
+  'Call for Proposals: Uganda &#8211; TREES 4 KARAMOJA (T4K) Initiative'), true);
+assert.equal(titleMatches('Open Call for Women’s Climate Action Grants (Uganda) - fundsforNGOs',
+  'Funding Empowerment: Grants Opportunities for Women'), false, 'fuzzy search hits are rejected');
+assert.equal(titleMatches('Call for Proposals: Forest Restoration and Community Conservation in Eastern... - fundsforNGOs',
+  'Call for Proposals: Forest Restoration and Community Conservation in Eastern Uganda and Karamoja'), true, 'cut headline matches by prefix');
+assert.equal(titleMatches('Call for... - fundsforNGOs', 'Call for Proposals: Anything'), false, 'too short a prefix to trust');
 
 console.log('fundsforNGOs verification tests passed');
