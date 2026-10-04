@@ -1,6 +1,7 @@
 import { XMLParser } from 'fast-xml-parser';
 import { makeId, enrich, stripHtml } from '../normalize.js';
 import { fetchRetry } from '../http.js';
+import { isCallPost } from './fundsforngos_verify.js';
 
 const parser = new XMLParser({ ignoreAttributes: false });
 
@@ -47,7 +48,8 @@ function rssToRecord(item, { source, funder, defaultType }) {
   });
 }
 
-// fundsforNGOs — aggregator; funder is named inside each post, so funder = null (parsed later)
+// fundsforNGOs — aggregator; the feed is a teaser, so funder/deadline/official link
+// are filled in afterwards from the full article (see fundsforngos_verify.js)
 export async function fetchFundsForNgos() {
   // www2 subdomain is stale (returns 1 item); www returns 25+
   // Africa feed items are explicitly Africa-scoped → force ea_relevant on those
@@ -62,7 +64,8 @@ export async function fetchFundsForNgos() {
       const items = await fetchFeed(f);
       for (const item of items) {
         const rec = rssToRecord(item, { source: 'fundsforNGOs', funder: null, defaultType: 'grant' });
-        if (!rec || seen.has(rec.id)) continue;
+        // Sample proposals, writing guides and newsletters share the feed; they aren't calls.
+        if (!rec || seen.has(rec.id) || !isCallPost(rec.url)) continue;
         seen.add(rec.id);
         out.push(forceEa ? { ...rec, ea_relevant: 1 } : rec);
       }

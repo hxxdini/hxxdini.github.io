@@ -14,6 +14,7 @@ import { fetchAecf } from './sources/aecf.js';
 import { fetchReliefWeb } from './sources/reliefweb.js';
 import { fetchGovUkFunding } from './sources/govuk_funding.js';
 import { fetchGrantsGov } from './sources/grants_gov.js';
+import { verifyFundsForNgos, isCallPost } from './sources/fundsforngos_verify.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SUMMARY_PATH = process.env.SUMMARY_PATH || path.join(ROOT, '.run-summary.json');
@@ -57,6 +58,25 @@ for (const [name, fetcher] of SOURCES) {
     perSource.push({ name, fetched: 0, added: 0, error: e.message });
     console.log(`FAILED: ${e.message}`);
   }
+}
+
+// fundsforNGOs: drop non-calls already in the DB (sample proposals, guides,
+// newsletters), then read the full article behind each teaser to confirm the
+// deadline and find the funder's own call page or PDF.
+const junk = db.prepare(`SELECT id, url FROM opportunities WHERE source = 'fundsforNGOs' AND ea_relevant = 1`).all()
+  .filter((row) => !isCallPost(row.url));
+const hide = db.prepare('UPDATE opportunities SET ea_relevant = 0 WHERE id = ?');
+for (const row of junk) hide.run(row.id);
+if (junk.length) console.log(`Hid ${junk.length} fundsforNGOs non-call posts`);
+
+process.stdout.write('→ fundsforNGOs full-post check ... ');
+try {
+  const v = await verifyFundsForNgos(db);
+  perSource.push({ name: 'fundsforNGOs full-post check', fetched: v.checked, added: 0, confirmed: v.confirmed, error: null });
+  console.log(`${v.checked} checked, ${v.confirmed} deadlines confirmed${v.missing ? `, ${v.missing} not found` : ''}`);
+} catch (e) {
+  perSource.push({ name: 'fundsforNGOs full-post check', fetched: 0, added: 0, error: e.message });
+  console.log(`FAILED: ${e.message}`);
 }
 
 // "live" mirrors exactly what site.js/digest.js show as the live count: EA-relevant,

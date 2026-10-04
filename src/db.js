@@ -38,6 +38,11 @@ export function openDb() {
   const columns = new Set(db.prepare('PRAGMA table_info(opportunities)').all().map((column) => column.name));
   if (!columns.has('applicant_type')) db.exec('ALTER TABLE opportunities ADD COLUMN applicant_type TEXT');
   if (!columns.has('school_eligible_uganda')) db.exec('ALTER TABLE opportunities ADD COLUMN school_eligible_uganda INTEGER DEFAULT 0');
+  // Full-post verification (fundsforNGOs): official call link, attached documents
+  // (JSON [{url,label}]), the article we read, and what it confirmed.
+  for (const [name, type] of [['official_url', 'TEXT'], ['documents', 'TEXT'], ['article_url', 'TEXT'], ['verify_status', 'TEXT'], ['verified_at', 'TEXT']]) {
+    if (!columns.has(name)) db.exec(`ALTER TABLE opportunities ADD COLUMN ${name} ${type}`);
+  }
 
   const unclassified = db.prepare(`
     SELECT id, title, summary, eligibility, countries, type
