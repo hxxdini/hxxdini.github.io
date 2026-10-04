@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { mapGovUkEntry, parseGovUkFundingFeed } from '../src/sources/govuk_funding.js';
 import { mapGrantOpportunity } from '../src/sources/grants_gov.js';
+import { mapGppNotice, financialYears } from '../src/sources/uganda_gpp.js';
 
 const today = '2026-09-27';
 
@@ -76,4 +77,30 @@ assert.equal(withoutDeadline.ea_relevant, true);
 assert.equal(mapGrantOpportunity({ id: 123458, title: 'Expired Uganda Grant', oppStatus: 'posted', closeDate: '09/01/2026' }, null, { countries: ['Uganda'] }, today), null);
 assert.equal(mapGrantOpportunity({ id: 123459, title: 'Draft Uganda Grant', oppStatus: 'forecasted', closeDate: '10/15/2026' }, null, { countries: ['Uganda'] }, today), null);
 
-console.log('Source adapter tests: GOV.UK feed and Grants.gov mapping passed');
+const gppNotice = mapGppNotice({
+  id: 98439,
+  title: 'Acquisition of an IT Service Management Tool',
+  estimatedValue: 1010000000,
+  entity_id: 478,
+  procurement_type: 'Non-Consultancy Services',
+  entity: 'Uganda Revenue Authority',
+  sector: 'Accountability',
+  deadline: '2026-10-21 00:00:00',
+  financial_year: '2026-2027',
+}, today);
+assert.ok(gppNotice);
+assert.equal(gppNotice.source, 'Uganda GPP (PPDA)');
+assert.equal(gppNotice.type, 'tender');
+assert.equal(gppNotice.deadline, '2026-10-21');
+assert.equal(gppNotice.url, 'https://gpp.ppda.go.ug/public/bid-invitations/tender-notice/98439');
+assert.equal(gppNotice.amount, 'UGX 1,010,000,000 (estimate)');
+assert.match(gppNotice.summary, /Uganda Revenue Authority — Non-Consultancy Services tender/);
+assert.deepEqual(gppNotice.countries, ['Uganda']);
+assert.equal(gppNotice.ea_relevant, true);
+assert.equal(mapGppNotice({ id: 1, title: 'Closed tender for road works', deadline: '2026-09-01 00:00:00' }, today), null);
+assert.equal(mapGppNotice({ id: 2, title: 'Tender without a deadline' }, today), null);
+assert.equal(mapGppNotice({ id: 3, title: 'Supply of chalk', deadline: '2026-10-01 00:00:00', estimatedValue: 0 }, today).amount, null);
+assert.deepEqual(financialYears('2026-10-04'), ['2026-2027', '2025-2026']);
+assert.deepEqual(financialYears('2026-03-15'), ['2025-2026', '2024-2025']);
+
+console.log('Source adapter tests: GOV.UK feed, Grants.gov and Uganda GPP mapping passed');
