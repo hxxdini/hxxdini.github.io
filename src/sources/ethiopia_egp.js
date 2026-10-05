@@ -1,4 +1,5 @@
 import { makeId, enrich } from '../normalize.js';
+import { fileURLToPath } from 'node:url';
 import { fetchRetry } from '../http.js';
 
 // Ethiopia Electronic Government Procurement (e-GP, Federal Public Procurement and
@@ -11,6 +12,9 @@ import { fetchRetry } from '../http.js';
 // leads link to the public list and quote the procurement reference to search for.
 const API = 'https://egp.gov.et/po-gw/cms-v2/api/sourcing/get-grouped-sourcing';
 export const LIST_URL = 'https://egp.gov.et/egp/bids/all';
+// egp.gov.et sends only its leaf certificate; clients without emSign SSL CA - G1 cached
+// (e.g. GitHub's Linux runner) can't build the chain. Ship the public intermediate.
+const EXTRA_CA = fileURLToPath(new URL('../certs/emsign-ssl-ca-g1.pem', import.meta.url));
 const PAGE = 50;
 const MAX_PAGES = 40;
 const MAX_DAYS_AHEAD = 400; // a few lots carry junk deadlines (2125, 2028)
@@ -62,7 +66,7 @@ export async function fetchEthiopiaEgp() {
   let total = Infinity;
   for (let page = 0; page < MAX_PAGES && page * PAGE < total; page++) {
     const url = `${API}?type=all&top=${PAGE}&skip=${page * PAGE}&locale=en`;
-    const res = await fetchRetry(url, { headers: { Accept: 'application/json' } }, { timeoutMs: 90000 });
+    const res = await fetchRetry(url, { headers: { Accept: 'application/json' }, extraCa: EXTRA_CA }, { timeoutMs: 90000 });
     if (!res.ok) throw new Error(`HTTP ${res.status} on page ${page + 1}`);
     let data;
     try { data = await res.json(); } catch { throw new Error(`non-JSON response on page ${page + 1}`); }

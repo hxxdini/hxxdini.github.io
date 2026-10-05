@@ -1,6 +1,6 @@
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
@@ -10,9 +10,9 @@ const exec = promisify(execFile);
 // hosts in sandboxed/local runs; curl is universally reliable), native fetch is fallback.
 // Returns a minimal Response-like object: { ok, status, text(), json() }.
 //
-// options: { method, headers: {}, body: string, form: { name: jsonString }, insecureTls: bool }
-// `insecureTls` skips certificate checks (curl -k). Only for public, read-only pages on a
-// host whose certificate is broken server-side; say why at the call site.
+// options: { method, headers: {}, body: string, form: { name: jsonString }, extraCa: path }
+// `extraCa` is a PEM intermediate to add to the system trust store, for hosts that don't
+// send their full certificate chain. Verification stays on.
 // `form` sends multipart/form-data with each field typed application/json (SEDIA-style).
 export async function fetchRetry(url, options = {}, { retries = 3, backoffMs = 2000, timeoutMs = 45000 } = {}) {
   let lastErr;
@@ -26,8 +26,8 @@ export async function fetchRetry(url, options = {}, { retries = 3, backoffMs = 2
       }
     } catch (e) {
       lastErr = e;
-      // Native fetch verifies TLS, so it can't stand in for an insecureTls host.
-      if (options.insecureTls) {
+      // Native fetch can't take an extra CA per request, so it would fail the same way.
+      if (options.extraCa) {
         lastErr = new Error(describe('curl', e));
       } else {
         // curl unavailable or failed hard — try native fetch once per attempt
@@ -50,7 +50,7 @@ async function curlFetch(url, options, timeoutMs) {
   const headerFile = path.join(dir, 'headers');
   const args = ['-sS', '--max-time', String(Math.ceil(timeoutMs / 1000)), '-D', headerFile, '-o', bodyFile, '-w', '%{http_code}'];
 
-  if (options.insecureTls) args.push('-k');
+  if (options.extraCa) args.push('--cacert', await caBundle(options.extraCa));
   args.push('-A', options.headers?.['User-Agent'] ?? 'Mozilla/5.0 (compatible; FundRadar/0.1)');
   if (options.method && options.method !== 'GET') args.push('-X', options.method);
   for (const [k, v] of Object.entries(options.headers ?? {})) {
@@ -79,13 +79,30 @@ async function curlFetch(url, options, timeoutMs) {
   }
 }
 
+// System trust store + one extra intermediate, written once per process per intermediate.
+const SYSTEM_CA = ['/etc/ssl/certs/ca-certificates.crt', '/etc/pki/tls/certs/ca-bundle.crt', '/etc/ssl/cert.pem'];
+const bundles = new Map();
+async function caBundle(extraCa) {
+  if (!bundles.has(extraCa)) {
+    bundles.set(extraCa, (async () => {
+      let system = '';
+      for (const f of SYSTEM_CA) { system = await readFile(f, 'utf8').catch(() => ''); if (system) break; }
+      if (!system) throw new Error('no system CA bundle found for extraCa');
+      const out = path.join(await mkdtemp(path.join(tmpdir(), 'fundradar-ca-')), 'bundle.pem');
+      await writeFile(out, `${system}\n${await readFile(extraCa, 'utf8')}`);
+      return out;
+    })());
+  }
+  return bundles.get(extraCa);
+}
+
 function describe(label, err) {
   const detail = String(err?.stderr ?? '').trim().split('\n').pop() || err?.cause?.code || err?.cause?.message || err?.message || String(err);
   return `${label}${err?.code && typeof err.code === 'number' ? ` (${err.code})` : ''}: ${detail}`.slice(0, 300);
 }
 
 async function nativeFetch(url, options, timeoutMs) {
-  const { insecureTls, ...rest } = options;
+  const { extraCa, ...rest } = options;
   const opts = { ...rest, signal: AbortSignal.timeout(timeoutMs) };
   if (options.form) {
     const fd = new FormData();
