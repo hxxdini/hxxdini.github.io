@@ -8,6 +8,8 @@ import { fetchFundsForNgos, fetchOpportunityDesk } from './sources/rss.js';
 import { fetchUngm } from './sources/ungm.js';
 import { fetchUgandaEgp } from './sources/uganda_egp.js';
 import { fetchUgandaGpp } from './sources/uganda_gpp.js';
+import { fetchRwandaUmucyo } from './sources/rwanda_umucyo.js';
+import { fetchEthiopiaEgp } from './sources/ethiopia_egp.js';
 import { fetchKenyaTenders } from './sources/kenya_tenders.js';
 import { fetchWebRadar } from './sources/webradar.js';
 import { fetchAecf } from './sources/aecf.js';
@@ -28,6 +30,8 @@ const SOURCES = [
   ['UNGM (UN agencies)', fetchUngm],
   ['Uganda eGP (PPDA)', fetchUgandaEgp],
   ['Uganda GPP (PPDA)', fetchUgandaGpp],
+  ['Rwanda Umucyo (e-Procurement)', fetchRwandaUmucyo],
+  ['Ethiopia e-GP (PPA)', fetchEthiopiaEgp],
   ['Kenya PPIP', fetchKenyaTenders],
   ['Web Radar', fetchWebRadar],
   ['AECF (Africa Enterprise Challenge Fund)', fetchAecf],

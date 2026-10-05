@@ -28,6 +28,8 @@ The main feed includes opportunities for all applicant types; school eligibility
 | UNGM (all UN agencies) | POST search, HTML rows | filtered to EA countries |
 | Uganda eGP (PPDA) | HTML tables, 4 tabs | expands ellipsis-truncated tender subjects from the notice detail table; micro-procurement windows are ~1 day |
 | Uganda GPP (PPDA) | JSON API (`cdn.ppda.go.ug/api/tender/notices`) | PPDA's Government Procurement Portal bid invitations; current + previous financial year, open deadlines only, estimated value in UGX |
+| Rwanda Umucyo (e-Procurement) | HTML table, POST-paged (50/page) | national e-procurement system (MINECOFIN/RPPA); list sorted by deadline, paged until deadlines pass; cancelled notices dropped; links go to the public notice detail page |
+| Ethiopia e-GP (PPA) | JSON behind the portal's public "all active tenders" list (`egp.gov.et/po-gw/cms-v2/api/sourcing/get-grouped-sourcing`), 50/page | undocumented endpoint, parsed defensively; formal tenders only (quotation purchases dropped), implausible deadlines (>400 days) dropped, mostly-Amharic titles dropped; per-lot pages need login so leads link to the public list with the reference number to search |
 | ReliefWeb | RSS (`reliefweb.int/jobs/rss.xml`, consultancies × EA countries) | API v1 is gone (410) and v2 needs an approved appname, so we use the keyless RSS feed; latest 20 consultancies, real closing dates |
 | Kenya PPIP (tenders.go.ke) | JSON API | aggressive rate limiting — slow paging + 429 retries |
 | Web Radar | Google News RSS + Bing RSS, 7 queries | broad discovery; **unverified leads**, labeled as such |

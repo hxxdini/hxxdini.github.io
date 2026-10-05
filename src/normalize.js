@@ -28,7 +28,7 @@ const SECTOR_KEYWORDS = {
   'Health': ['health', 'medical', 'disease', 'hiv', 'malaria', 'tuberculosis', 'vaccine', 'maternal', 'sanitation'],
   'Education': ['education', 'school', 'teacher', 'learner', 'literacy', 'scholarship', 'curriculum', 'student'],
   'Climate & Environment': ['climate', 'environment', 'biodiversity', 'conservation', 'renewable', 'resilience', 'adaptation', 'carbon', 'forest'],
-  'Water & WASH': ['water', 'wash ', 'hygiene', 'irrigation', 'borehole'],
+  'Water & WASH': ['water', ' wash ', 'hygiene', 'irrigation', 'borehole'],
   'Governance & Rights': ['governance', 'human rights', 'democracy', 'justice', 'accountability', 'anti-corruption', 'rule of law', 'civic'],
   'Gender & Inclusion': ['gender', 'women', 'girls', 'gbv', 'inclusion', 'disability', 'lgbt'],
   'Youth': ['youth', 'young people', 'adolescent'],
