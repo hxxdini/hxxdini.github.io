@@ -10,7 +10,9 @@ const exec = promisify(execFile);
 // hosts in sandboxed/local runs; curl is universally reliable), native fetch is fallback.
 // Returns a minimal Response-like object: { ok, status, text(), json() }.
 //
-// options: { method, headers: {}, body: string, form: { name: jsonString } }
+// options: { method, headers: {}, body: string, form: { name: jsonString }, insecureTls: bool }
+// `insecureTls` skips certificate checks (curl -k). Only for public, read-only pages on a
+// host whose certificate is broken server-side; say why at the call site.
 // `form` sends multipart/form-data with each field typed application/json (SEDIA-style).
 export async function fetchRetry(url, options = {}, { retries = 3, backoffMs = 2000, timeoutMs = 45000 } = {}) {
   let lastErr;
@@ -24,11 +26,17 @@ export async function fetchRetry(url, options = {}, { retries = 3, backoffMs = 2
       }
     } catch (e) {
       lastErr = e;
-      // curl unavailable or failed hard — try native fetch once per attempt
-      try {
-        return await nativeFetch(url, options, timeoutMs);
-      } catch (e2) {
-        lastErr = e2;
+      // Native fetch verifies TLS, so it can't stand in for an insecureTls host.
+      if (options.insecureTls) {
+        lastErr = new Error(describe('curl', e));
+      } else {
+        // curl unavailable or failed hard — try native fetch once per attempt
+        try {
+          return await nativeFetch(url, options, timeoutMs);
+        } catch (e2) {
+          // Keep both causes: "fetch failed" alone hides blocks, resets and TLS errors.
+          lastErr = new Error(`${describe('curl', e)}; ${describe('fetch', e2)}`);
+        }
       }
     }
     await new Promise((r) => setTimeout(r, backoffMs * (attempt + 1)));
@@ -42,6 +50,7 @@ async function curlFetch(url, options, timeoutMs) {
   const headerFile = path.join(dir, 'headers');
   const args = ['-sS', '--max-time', String(Math.ceil(timeoutMs / 1000)), '-D', headerFile, '-o', bodyFile, '-w', '%{http_code}'];
 
+  if (options.insecureTls) args.push('-k');
   args.push('-A', options.headers?.['User-Agent'] ?? 'Mozilla/5.0 (compatible; FundRadar/0.1)');
   if (options.method && options.method !== 'GET') args.push('-X', options.method);
   for (const [k, v] of Object.entries(options.headers ?? {})) {
@@ -70,8 +79,14 @@ async function curlFetch(url, options, timeoutMs) {
   }
 }
 
+function describe(label, err) {
+  const detail = String(err?.stderr ?? '').trim().split('\n').pop() || err?.cause?.code || err?.cause?.message || err?.message || String(err);
+  return `${label}${err?.code && typeof err.code === 'number' ? ` (${err.code})` : ''}: ${detail}`.slice(0, 300);
+}
+
 async function nativeFetch(url, options, timeoutMs) {
-  const opts = { ...options, signal: AbortSignal.timeout(timeoutMs) };
+  const { insecureTls, ...rest } = options;
+  const opts = { ...rest, signal: AbortSignal.timeout(timeoutMs) };
   if (options.form) {
     const fd = new FormData();
     for (const [name, json] of Object.entries(options.form)) {

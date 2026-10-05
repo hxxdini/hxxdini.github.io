@@ -5,6 +5,10 @@ import { fetchRetry } from '../http.js';
 // Row structure: Reference | Type | Subject (truncated) | Published | Deadline | Actions
 // Notice URLs are absolute: https://egpuganda.go.ug/index/{id}_egp
 const BASE = 'https://egpuganda.go.ug';
+// egpuganda.go.ug's Sectigo certificate expired on 2026-10-03 and hasn't been renewed,
+// so every verified request fails (curl exit 60). These are public notice pages, so skip
+// verification for this host only. Drop TLS once they renew the certificate.
+const TLS = { insecureTls: true };
 const PAGES = ['/bid-notices', '/bid-notices/consultancy', '/bid-notices/none-consultancy', '/bid-notices/supplies', '/bid-notices/works'];
 
 export function isTruncatedSubject(subject) {
@@ -46,7 +50,7 @@ export function completeSubject(subject, expandedSubject = null) {
 
 async function fetchFullSubject(noticeUrl) {
   try {
-    const res = await fetchRetry(noticeUrl, {}, { timeoutMs: 60000 });
+    const res = await fetchRetry(noticeUrl, TLS, { timeoutMs: 60000 });
     if (!res.ok) return null;
     return parseFullSubject(await res.text());
   } catch {
@@ -58,15 +62,17 @@ export async function fetchUgandaEgp() {
   const seen = new Set();
   const out = [];
   const today = new Date().toISOString().slice(0, 10);
+  const failures = [];
 
   for (const page of PAGES) {
     let html;
     try {
-      const res = await fetchRetry(`${BASE}${page}`, {}, { timeoutMs: 60000 });
+      const res = await fetchRetry(`${BASE}${page}`, TLS, { timeoutMs: 60000 });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       html = await res.text();
     } catch (e) {
       console.error(`  ! uganda-egp ${page}: ${e.message}`);
+      failures.push(`${page}: ${e.message}`);
       continue;
     }
 
@@ -112,5 +118,7 @@ export async function fetchUgandaEgp() {
       }));
     }
   }
+  // Never fail silently: every tab failing used to return [] and look like a quiet day.
+  if (failures.length === PAGES.length) throw new Error(`all ${PAGES.length} tabs failed — ${failures[0]}`);
   return out;
 }
