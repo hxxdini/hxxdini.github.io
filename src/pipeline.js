@@ -17,6 +17,7 @@ import { fetchReliefWeb } from './sources/reliefweb.js';
 import { fetchGovUkFunding } from './sources/govuk_funding.js';
 import { fetchGrantsGov } from './sources/grants_gov.js';
 import { withRelay } from './relay.js';
+import { fetchDrc } from './sources/drc.js';
 import { verifyFundsForNgos, verifyWebRadarFundsForNgos, isCallPost } from './sources/fundsforngos_verify.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -40,6 +41,8 @@ const SOURCES = [
   ['ReliefWeb', withRelay('reliefweb', fetchReliefWeb)],
   ['UK International Development Funding Finder', fetchGovUkFunding],
   ['Grants.gov', fetchGrantsGov],
+  // NGO and private buyers (not government portals)
+  ['Danish Refugee Council (DRC)', fetchDrc],
 ];
 
 const db = openDb();
