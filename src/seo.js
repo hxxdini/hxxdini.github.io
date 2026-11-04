@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { openDb } from './db.js';
-import { detectTenderCategory, tenderCategoryLabel, TENDER_CATEGORIES } from './normalize.js';
+import { canonicalCountry, detectTenderCategory, tenderCategoryLabel, TENDER_CATEGORIES } from './normalize.js';
 import { PICKER_CSS, tenderPickerHtml } from './tender-picker.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -37,8 +37,7 @@ function slug(value) {
 }
 
 function countryName(value) {
-  if (/^Congo, (?:The )?Democratic Republic of/i.test(value)) return 'DR Congo';
-  return value;
+  return canonicalCountry(value);
 }
 
 function leadPath(id) {
@@ -85,7 +84,7 @@ function leadPage(row) {
   const canonical = `${BASE}/${relative}`;
   const description = summary(row);
   const eligibility = JSON.parse(row.eligibility ?? '[]');
-  const countries = JSON.parse(row.countries ?? '[]').map(countryName);
+  const countries = [...new Set(JSON.parse(row.countries ?? '[]').map(countryName).filter(Boolean))];
   const applicant = labels[row.applicant_type] ?? 'applicants';
   const source = safeUrl(row.url);
   const official = safeUrl(row.official_url);

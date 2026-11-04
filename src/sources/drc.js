@@ -1,4 +1,4 @@
-import { makeId, enrich, stripHtml } from '../normalize.js';
+import { makeId, enrich, stripHtml, canonicalCountries } from '../normalize.js';
 import { fetchRetry } from '../http.js';
 
 // Danish Refugee Council (DRC) public tender portal: an international NGO that
@@ -54,7 +54,7 @@ export function parseDrcTenders(html, today = new Date().toISOString().slice(0, 
     });
     // "DRC" in titles means the Danish Refugee Council, not DR Congo, so the
     // portal's own location field decides the country, not text detection.
-    rec.countries = countries;
+    rec.countries = canonicalCountries(countries);
     out.push(rec);
   }
   return out;

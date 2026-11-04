@@ -17,6 +17,35 @@ const COUNTRY_ALIASES = {
   'Congo, Democratic Republic of': ['democratic republic of congo', 'dr congo', 'drc'],
 };
 
+// One name per country, whatever spelling a source uses ("Tanzania, United
+// Republic of", "Congo, The Democratic Republic of the", "Somalia, Federal
+// Republic of" ...). Anything outside East Africa scope maps to null and is
+// dropped, including the Republic of Congo (Brazzaville), which is a
+// different country from DR Congo.
+const CANONICAL_COUNTRIES = [
+  ['Uganda', /^(?:republic of )?uganda$/],
+  ['Kenya', /^(?:republic of )?kenya$/],
+  ['Tanzania', /^(?:tanzania(?:,? united republic of)?|united republic of tanzania)$/],
+  ['Rwanda', /^(?:republic of )?rwanda$/],
+  ['Burundi', /^(?:republic of )?burundi$/],
+  ['South Sudan', /^(?:republic of )?south sudan$/],
+  ['Ethiopia', /^(?:federal democratic republic of )?ethiopia$/],
+  ['Somalia', /^(?:somalia(?:,? federal republic of)?|federal republic of somalia)$/],
+  ['DR Congo', /^(?:congo,? (?:the )?democratic republic of(?: the)?|(?:the )?democratic republic of (?:the )?congo|dr ?congo|d\.?r\.?c\.?|congo[- ]kinshasa)$/],
+  // Bare "Congo" is the UN/World Bank name for the Republic of Congo, so it is dropped.
+];
+
+export function canonicalCountry(name) {
+  const key = String(name ?? '').toLowerCase().replace(/\s+/g, ' ').trim();
+  if (!key) return null;
+  for (const [canonical, pattern] of CANONICAL_COUNTRIES) if (pattern.test(key)) return canonical;
+  return null;
+}
+
+export function canonicalCountries(list) {
+  return [...new Set((list ?? []).map(canonicalCountry).filter(Boolean))];
+}
+
 const REGION_HINTS = [
   'east africa', 'eastern africa', 'sub-saharan africa', 'sub saharan africa',
   'africa', 'african', 'developing countries', 'global south', 'low- and middle-income',
@@ -271,7 +300,7 @@ export function isEaRelevant(countries, text) {
 export function enrich(base) {
   const text = `${base.title} ${base.summary ?? ''}`;
   // Merge explicit source countries (authoritative) with text detection
-  const countries = [...new Set([...(base.countries ?? []), ...detectCountries(text)])];
+  const countries = canonicalCountries([...(base.countries ?? []), ...detectCountries(text)]);
   return {
     ...base,
     countries,

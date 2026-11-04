@@ -186,6 +186,8 @@ const html = `<title>FundRadar EA — Funding &amp; Tender Intelligence</title>
   .toggle { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 8px 13px; border: 1px solid var(--line); border-radius: 999px;
     background: var(--surface); color: var(--ink); font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; }
   .toggle:hover { border-color: #82b39f; }
+  .toggle-count { display: inline-grid; place-items: center; min-width: 24px; height: 22px; padding: 0 7px; border-radius: 999px; background: var(--line); font-size: 12px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .toggle[aria-pressed="true"] .toggle-count { background: var(--green); color: #fff; }
   .toggle[aria-pressed="true"] { border-color: var(--green); background: var(--mint); color: var(--green-dark); box-shadow: inset 0 0 0 1px var(--green); }
   .filter-btn { flex-shrink: 0; }
   .filter-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 99px;
@@ -365,9 +367,9 @@ const html = `<title>FundRadar EA — Funding &amp; Tender Intelligence</title>
         <option value="new_desc">Newest found</option>
       </select>
     </div>
-    <button class="toggle" id="newToggle" aria-pressed="false">New (<span id="newCount">0</span>)</button>
-    <button class="toggle" id="schoolToggle" aria-pressed="false" aria-label="Filter for schools eligible in Uganda">Uganda schools (<span id="schoolCount">0</span>)</button>
-    <button class="toggle" id="shortlistToggle" aria-pressed="false">&#9734; Saved (<span id="shortlistCount">0</span>)</button>
+    <button class="toggle" id="newToggle" aria-pressed="false">New <span class="toggle-count" id="newCount">0</span></button>
+    <button class="toggle" id="schoolToggle" aria-pressed="false" aria-label="Filter for schools eligible in Uganda">Uganda schools <span class="toggle-count" id="schoolCount">0</span></button>
+    <button class="toggle" id="shortlistToggle" aria-pressed="false">&#9734; Saved <span class="toggle-count" id="shortlistCount">0</span></button>
   </div>
 
   <div class="board">

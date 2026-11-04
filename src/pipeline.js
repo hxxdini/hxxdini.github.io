@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { openDb, upsertOpportunity } from './db.js';
+import { canonicalCountries, isEaRelevant } from './normalize.js';
 import { fetchWorldBank } from './sources/worldbank.js';
 import { fetchEuSedia } from './sources/eu_sedia.js';
 import { fetchFundsForNgos, fetchOpportunityDesk } from './sources/rss.js';
@@ -67,6 +68,24 @@ for (const [name, fetcher] of SOURCES) {
     perSource.push({ name, fetched: 0, added: 0, error: e.message });
     console.log(`FAILED: ${e.message}`);
   }
+}
+
+// One name per country across all rows (sources spell them differently, and
+// older rows predate canonicalCountries). Rows whose only countries are outside
+// East Africa (e.g. Republic of Congo) lose EA relevance unless their text is
+// Africa-wide.
+{
+  const fix = db.prepare('UPDATE opportunities SET countries = ?, ea_relevant = ? WHERE id = ?');
+  let changed = 0;
+  for (const row of db.prepare('SELECT id, title, summary, countries, ea_relevant FROM opportunities').all()) {
+    const before = JSON.parse(row.countries ?? '[]');
+    const after = canonicalCountries(before);
+    if (JSON.stringify(before) === JSON.stringify(after)) continue;
+    const relevant = row.ea_relevant && (after.length || !before.length || isEaRelevant(after, `${row.title} ${row.summary ?? ''}`)) ? 1 : 0;
+    fix.run(JSON.stringify(after), relevant, row.id);
+    changed++;
+  }
+  if (changed) console.log(`Normalized country names on ${changed} rows`);
 }
 
 // fundsforNGOs: drop non-calls already in the DB (sample proposals, guides,
