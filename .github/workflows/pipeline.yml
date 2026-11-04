@@ -56,6 +56,13 @@ jobs:
           done
           echo "::error::GitHub Pages build did not succeed after retries — site may be stale"
           exit 1
+      - name: Ping IndexNow (Bing, DuckDuckGo, Yandex) with new pages
+        if: steps.pages.outcome == 'success'
+        continue-on-error: true
+        run: |
+          node src/indexnow.js
+          git add data/indexnow-sent.json
+          git diff --cached --quiet || { git commit -m "IndexNow state $(date -u +'%F %H:%M')" && git pull --rebase -X ours origin main && git push; }
       - name: Notify Telegram
         if: always()
         env:
