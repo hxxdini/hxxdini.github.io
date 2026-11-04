@@ -1,0 +1,23 @@
+name: channel-post
+
+# Daily digest to the public Telegram channel (@fundradarea) at 07:30 EAT,
+# built from the database the pipeline bot committed. See src/channel-post.js.
+on:
+  schedule:
+    - cron: '30 4 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 26
+      - run: npm ci
+      - name: Post to the Telegram channel
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHANNEL_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+        run: node src/channel-post.js

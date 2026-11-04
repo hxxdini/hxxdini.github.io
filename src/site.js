@@ -6,6 +6,7 @@
 // is rendered client-side through esc(); only literal source names and computed
 // numbers/dates are ever interpolated server-side.
 import { PICKER_CSS, tenderPickerHtml } from './tender-picker.js';
+import { CONTACT, channelLink, whatsappLink } from './config.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -328,6 +329,8 @@ const html = `<title>FundRadar EA — Funding &amp; Tender Intelligence</title>
 
 <main class="shell" id="main">
   <style>${PICKER_CSS}</style>${tenderPickerHtml()}
+  <style>.svc{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 0 22px}.svc a{display:block;padding:16px 18px;border:1px solid var(--line);border-radius:14px;background:var(--surface,#fff);color:inherit;text-decoration:none}.svc a:hover{border-color:#82b39f}.svc b{display:block;font-size:16px;margin-bottom:3px}.svc span{color:var(--muted);font-size:13px}@media(max-width:640px){.svc{grid-template-columns:1fr}}</style>
+  <div class="svc"><a href="${channelLink}" rel="noopener"><b>📲 Free daily alerts on Telegram</b><span>New tenders every morning at 7:30 · @${CONTACT.telegramChannel}</span></a><a href="./bid-desk.html"><b>✍️ Need help to win a bid?</b><span>Bid Desk checks or prepares your bid · WhatsApp ${CONTACT.phoneDisplay}</span></a></div>
   <div class="rail-head">
     <p class="section-kicker">Closing within 7 days</p>
   </div>
