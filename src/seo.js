@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { openDb } from './db.js';
+import { detectTenderCategory, tenderCategoryLabel, TENDER_CATEGORIES } from './normalize.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DOCS = path.join(ROOT, 'docs');
@@ -68,7 +69,7 @@ const css = `:root{--ink:#102522;--muted:#65736e;--paper:#f3f5ef;--surface:#fff;
 function document({ title, description, canonical, body, structured, noindex = false }) {
   const text = escapeHtml(title);
   const descriptionText = escapeHtml(description);
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#102522"><title>${text} · FundRadar EA</title><meta name="description" content="${descriptionText}"><link rel="canonical" href="${escapeHtml(canonical)}"><meta property="og:type" content="article"><meta property="og:title" content="${text} · FundRadar EA"><meta property="og:description" content="${descriptionText}"><meta property="og:url" content="${escapeHtml(canonical)}">${noindex ? '<meta name="robots" content="noindex,follow">' : ''}${structured ? `<script type="application/ld+json">${structured}</script>` : ''}<style>${css}</style></head><body><header class="mast"><div class="shell bar"><a class="brand" href="/index.html"><span class="mark">F</span>FundRadar EA</a><a href="/for-you.html">Find calls for you ↗</a></div><div class="shell hero">${body.hero}</div></header><main class="shell">${body.main}</main><footer><div class="shell">FundRadar is a discovery guide. Verify deadlines, terms and eligibility with the original source. <a href="/index.html">Full feed</a> · <a href="/funding/index.html">Browse by country and audience</a></div></footer></body></html>\n`;
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#102522"><title>${text} · FundRadar EA</title><meta name="description" content="${descriptionText}"><link rel="canonical" href="${escapeHtml(canonical)}"><meta property="og:type" content="article"><meta property="og:title" content="${text} · FundRadar EA"><meta property="og:description" content="${descriptionText}"><meta property="og:url" content="${escapeHtml(canonical)}">${noindex ? '<meta name="robots" content="noindex,follow">' : ''}${structured ? `<script type="application/ld+json">${structured}</script>` : ''}<style>${css}</style></head><body><header class="mast"><div class="shell bar"><a class="brand" href="/index.html"><span class="mark">F</span>FundRadar EA</a><a href="/for-you.html">Find calls for you ↗</a></div><div class="shell hero">${body.hero}</div></header><main class="shell">${body.main}</main><footer><div class="shell">FundRadar is a discovery guide. Verify deadlines, terms and eligibility with the original source. <a href="/index.html">Full feed</a> · <a href="/funding/index.html">Browse by country and audience</a> · <a href="/tenders/index.html">Tenders by category</a></div></footer></body></html>\n`;
 }
 
 function write(relative, content) {
@@ -174,7 +175,48 @@ for (const file of fs.readdirSync(path.join(DOCS, 'funding')).filter((name) => n
     body: { hero: '<span class="eyebrow">Category update</span><h1>No current listings here.</h1>', main: '<div class="panel"><p>These listings are no longer current. Browse other categories for live opportunities.</p><a class="cta" href="/funding/index.html">Browse current categories ↗</a></div>' },
   }));
 }
-const sitemapPaths = ['index.html', 'for-you.html', ...leadPaths, ...landingPaths];
+// Tender category pages: "Construction tenders in Uganda" etc. These match
+// what suppliers actually search for.
+const tenderGroups = new Map();
+const tenderCategoryTotals = new Map();
+for (const row of rows) {
+  if (row.type !== 'tender') continue;
+  const category = detectTenderCategory(row.title, row.summary);
+  tenderCategoryTotals.set(category, (tenderCategoryTotals.get(category) ?? 0) + 1);
+  for (const country of new Set(JSON.parse(row.countries ?? '[]').map(countryName))) {
+    if (!country || country === 'Africa') continue;
+    const key = `${category}|${country}`;
+    if (!tenderGroups.has(key)) tenderGroups.set(key, []);
+    tenderGroups.get(key).push(row);
+  }
+}
+const tenderPaths = [];
+const tenderLinks = new Map();
+for (const [key, group] of [...tenderGroups].sort((a, b) => a[0].localeCompare(b[0]))) {
+  const [category, country] = key.split('|');
+  const label = tenderCategoryLabel(category);
+  const relative = `tenders/${slug(category)}-${slug(country)}.html`;
+  tenderPaths.push(landingPage(relative, `${label} tenders in ${country}`, group,
+    `Open ${label.toLowerCase()} tenders in ${country}, collected from official procurement portals and agencies and refreshed every four hours. Categories are assigned automatically from the tender title; always read the full notice.`));
+  if (!tenderLinks.has(country)) tenderLinks.set(country, []);
+  tenderLinks.get(country).push(`<a href="/${relative}">${escapeHtml(label)} (${group.length})</a>`);
+}
+const tenderDirectory = [...tenderLinks.keys()].sort().map((country) => `<section class="panel"><h2>${escapeHtml(country)}</h2><div class="links">${tenderLinks.get(country).join('')}</div></section>`).join('');
+write('tenders/index.html', document({ title: 'Open tenders in East Africa by category', description: 'Browse open government, UN and donor tenders in East Africa by category and country: construction, ICT, medical, supplies, consultancy and more.', canonical: `${BASE}/tenders/index.html`, body: {
+  hero: '<span class="eyebrow">Tenders · East Africa</span><h1>Find tenders in your line of business.</h1><p>Open tenders from official procurement portals and agencies across East Africa, grouped by what they buy.</p>',
+  main: `${tenderDirectory}<p class="notice">Categories: ${TENDER_CATEGORIES.map(([k, l]) => `${escapeHtml(l)} (${tenderCategoryTotals.get(k) ?? 0})`).join(' · ')}. Automated from tender titles; check each notice.</p>`,
+} }));
+tenderPaths.push('tenders/index.html');
+const currentTenders = new Set(tenderPaths.map((relative) => path.basename(relative)));
+for (const file of fs.readdirSync(path.join(DOCS, 'tenders')).filter((name) => name.endsWith('.html'))) {
+  if (currentTenders.has(file)) continue;
+  const relative = `tenders/${file}`;
+  write(relative, document({ title: 'No open tenders here right now', description: 'This FundRadar tender category has no open listings.', canonical: `${BASE}/${relative}`, noindex: true,
+    body: { hero: '<span class="eyebrow">Category update</span><h1>No open tenders here right now.</h1>', main: '<div class="panel"><p>These tenders have closed. Browse other categories for open tenders.</p><a class="cta" href="/tenders/index.html">Browse open tenders ↗</a></div>' },
+  }));
+}
+
+const sitemapPaths = ['index.html', 'for-you.html', ...leadPaths, ...landingPaths, ...tenderPaths];
 write('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sitemapPaths.map((relative) => `  <url><loc>${BASE}/${escapeHtml(relative)}</loc></url>`).join('\n')}\n</urlset>\n`);
 write('robots.txt', `User-agent: *\nAllow: /\nSitemap: ${BASE}/sitemap.xml\n`);
-console.log(`SEO pages: ${leadPaths.length} live leads, ${landingPaths.length} landing pages, ${sitemapPaths.length} sitemap URLs`);
+console.log(`SEO pages: ${leadPaths.length} live leads, ${landingPaths.length} landing pages, ${tenderPaths.length} tender category pages, ${sitemapPaths.length} sitemap URLs`);

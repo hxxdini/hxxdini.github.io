@@ -49,6 +49,34 @@ const ELIGIBILITY_KEYWORDS = {
   'Government': ['government', 'ministry', 'public sector', 'municipal'],
 };
 
+// Tender categories, checked in order; the first match wins. The title is
+// checked first because tender titles name the actual goods/works.
+export const TENDER_CATEGORIES = [
+  ['consultancy', 'Consultancy & Professional Services', /\b(?:consultan\w*|evaluation|audit\w*|survey\w*|feasibility|baseline|assessment|technical assistance|advisory|study|studies|valuation|legal services|consultant individuel|supervision services|public relations|[ée]tudes?)\b/i],
+  ['construction', 'Construction & Civil Works', /\b(?:construct\w*|building works?|buildings?|renovat\w*|rehabilitat\w*|refurb\w*|civil works?|roads?|bridges?|latrines?|boreholes?|plumbing|carpentry|masonry|fencing|travaux|works?|drilling|upgrad\w*|sewers?|dams?)\b/i],
+  ['energy', 'Energy & Electrical', /\b(?:solar|electrical|electricity|line installation|transformers?|generators?|substations?|transmission lines?|power supply|street ?lights?)\b/i],
+  ['ict', 'ICT, Computers & Electronics', /\b(?:ict|computers?|laptops?|software|it equipments?|it hardware|network\w*|toners?|printers?|cctv|servers?|electronics?|digital|smart classroom|data cent\w*|communication|telecom\w*|internet|website)\b/i],
+  ['medical', 'Medical, Lab & Pharmaceuticals', /\b(?:medical|medicines?|pharma\w*|drugs?|laborator\w*|reagents?|hospital|health|clinical|dental|surgical|chemicals?|x-ray)\b/i],
+  ['vehicles', 'Vehicles, Fuel & Machinery', /\b(?:fuel|lubricants?|vehicles?|motor\w*|tyres?|tires?|spare parts|machinery|plant hire|trucks?|garage|v[ée]hicules?|carburant|bus|buses|bicycles?|bicyclettes?|motorcycles?)\b/i],
+  ['hospitality', 'Catering, Travel, Hotels & Events', /\b(?:catering|food and beverages?|beverages?|air tickets?|flight tickets?|travel|hotels?|venue|refreshments?|events?|meals?|food ?stuffs?|conference|accommodation|lunch)\b/i],
+  ['facilities', 'Cleaning, Security & Facilities', /\b(?:clean\w*|security services?|security equipment|guard\w*|fumigat\w*|waste|garbage|laundry|loading|offloading|pest control|gardening|landscap\w*|maintenance)\b/i],
+  ['agriculture', 'Agriculture & Livestock', /\b(?:agricultur\w*|seeds?|fertili[sz]\w*|livestock|green ?houses?|veterinar\w*|animal feeds?|irrigation|seedlings?)\b/i],
+  ['printing', 'Printing, Branding & Media', /\b(?:printing|publishing|branding|advertis\w*|media|signage|photograph\w*|audio[- ]visual|film|video)\b/i],
+  ['supplies', 'Office Supplies, Furniture & Uniforms', /\b(?:stationer\w*|stationary|office supplies|office equipment|uniforms?|furniture|furnishings?|desks?|chairs?|kitchen|textiles?|sports|sanitary|equipment|materials|supply|supplies|fourniture|achat|acquisition|goods)\b/i],
+];
+
+export function detectTenderCategory(title = '', summary = '') {
+  for (const text of [title, summary]) {
+    if (!text) continue;
+    for (const [key, , pattern] of TENDER_CATEGORIES) if (pattern.test(text)) return key;
+  }
+  return 'other';
+}
+
+export function tenderCategoryLabel(key) {
+  return TENDER_CATEGORIES.find(([k]) => k === key)?.[1] ?? 'Other Goods & Services';
+}
+
 export function makeId(source, key) {
   return crypto.createHash('sha256').update(`${source}::${key}`).digest('hex').slice(0, 24);
 }
