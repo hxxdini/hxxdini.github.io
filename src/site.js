@@ -5,6 +5,7 @@
 // All per-item text (titles, funders, summaries — scraped, untrusted)
 // is rendered client-side through esc(); only literal source names and computed
 // numbers/dates are ever interpolated server-side.
+import { PICKER_CSS, tenderPickerHtml } from './tender-picker.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -281,6 +282,9 @@ const html = `<title>FundRadar EA — Funding &amp; Tender Intelligence</title>
     aside.sidebar { position: sticky; top: 80px; z-index: auto; width: auto; padding: 0; overflow: visible; background: none; box-shadow: none; transform: none; transition: none; }
     .drawer-head, .sidebar-backdrop, .filter-btn { display: none; }
   }
+  @media (max-width: 520px) {
+    .top-links a[href="./funding/index.html"] { display: none; }
+  }
   @media (max-width: 380px) {
     .top-links .pill-link:not(.primary) { display: none; }
     .fact b { font-size: 22px; }
@@ -299,6 +303,7 @@ const html = `<title>FundRadar EA — Funding &amp; Tender Intelligence</title>
   <div class="shell topbar">
     <a class="brand" href="./index.html" aria-label="FundRadar EA home"><span class="brand-mark" aria-hidden="true">F</span><span>FundRadar <small>EA</small></span></a>
     <nav class="top-links" aria-label="Site">
+      <a class="pill-link" href="./tenders/index.html">Tenders</a>
       <a class="pill-link" href="./funding/index.html">By country</a>
       <a class="pill-link primary" href="./for-you.html">For you <span aria-hidden="true">↗</span></a>
     </nav>
@@ -320,6 +325,7 @@ const html = `<title>FundRadar EA — Funding &amp; Tender Intelligence</title>
 </header>
 
 <main class="shell" id="main">
+  <style>${PICKER_CSS}</style>${tenderPickerHtml()}
   <div class="rail-head">
     <p class="section-kicker">Closing within 7 days</p>
   </div>

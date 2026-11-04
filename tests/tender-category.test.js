@@ -31,3 +31,9 @@ assert.equal(detectTenderCategory('Tender No. 12/2026', 'Construction of a two-c
 assert.equal(tenderCategoryLabel('ict'), 'ICT, Computers & Electronics');
 assert.equal(tenderCategoryLabel('other'), 'Other Goods & Services');
 console.log('tender-category tests passed');
+
+import { tenderPickerHtml } from '../src/tender-picker.js';
+const pickerHtml = tenderPickerHtml();
+assert.match(pickerHtml, /fetch\('\/tenders\/pages\.json'\)/);
+assert.match(pickerHtml, /href="\/tenders\/index\.html"/); // no-JS fallback
+console.log('tender picker tests passed');

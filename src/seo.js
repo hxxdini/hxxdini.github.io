@@ -3,11 +3,13 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { openDb } from './db.js';
 import { detectTenderCategory, tenderCategoryLabel, TENDER_CATEGORIES } from './normalize.js';
+import { PICKER_CSS, tenderPickerHtml } from './tender-picker.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DOCS = path.join(ROOT, 'docs');
 const BASE = 'https://hxxdini.github.io';
 const today = new Date().toISOString().slice(0, 10);
+const picker = `<style>${PICKER_CSS}</style>${tenderPickerHtml()}`;
 const labels = {
   'NGO': 'NGOs', 'firm/consultancy': 'firms', 'school/institution': 'schools',
   'individual/fellow': 'individuals', 'university staff': 'university staff',
@@ -164,7 +166,7 @@ for (const [key, group] of groups) {
 const directory = [...countryGroups.keys()].sort().map((country) => `<a href="/funding/${slug(country)}.html">${escapeHtml(country)}</a>`).join('');
 write('funding/index.html', document({ title: 'Browse funding by country and audience', description: 'Explore FundRadar funding listings by country and applicant type.', canonical: `${BASE}/funding/index.html`, body: {
   hero: '<span class="eyebrow">Explore funding · East Africa</span><h1>Find a starting point.</h1><p>Browse current calls by country, then follow each lead to its original publisher.</p>',
-  main: `<section class="panel"><h2>Countries</h2><div class="links">${directory}</div><p class="notice">Country and audience pages reflect only currently tagged leads. Eligibility must be verified with the publisher.</p></section>`,
+  main: `${picker}<section class="panel"><h2>Countries</h2><div class="links">${directory}</div><p class="notice">Country and audience pages reflect only currently tagged leads. Eligibility must be verified with the publisher.</p></section>`,
 } }));
 landingPaths.push('funding/index.html');
 const currentLandings = new Set(landingPaths.map((relative) => path.basename(relative)));
@@ -192,6 +194,7 @@ for (const row of rows) {
 }
 const tenderPaths = [];
 const tenderLinks = new Map();
+const pickerData = { generatedAt: new Date().toISOString(), countries: {} };
 for (const [key, group] of [...tenderGroups].sort((a, b) => a[0].localeCompare(b[0]))) {
   const [category, country] = key.split('|');
   const label = tenderCategoryLabel(category);
@@ -200,11 +203,14 @@ for (const [key, group] of [...tenderGroups].sort((a, b) => a[0].localeCompare(b
     `Open ${label.toLowerCase()} tenders in ${country}, collected from official procurement portals and agencies and refreshed every four hours. Categories are assigned automatically from the tender title; always read the full notice.`));
   if (!tenderLinks.has(country)) tenderLinks.set(country, []);
   tenderLinks.get(country).push(`<a href="/${relative}">${escapeHtml(label)} (${group.length})</a>`);
+  (pickerData.countries[country] ??= []).push({ key: category, label, count: group.length, url: `/${relative}` });
 }
+for (const list of Object.values(pickerData.countries)) list.sort((a, b) => (a.key === 'other') - (b.key === 'other') || b.count - a.count);
+write('tenders/pages.json', `${JSON.stringify(pickerData)}\n`);
 const tenderDirectory = [...tenderLinks.keys()].sort().map((country) => `<section class="panel"><h2>${escapeHtml(country)}</h2><div class="links">${tenderLinks.get(country).join('')}</div></section>`).join('');
 write('tenders/index.html', document({ title: 'Open tenders in East Africa by category', description: 'Browse open government, UN and donor tenders in East Africa by category and country: construction, ICT, medical, supplies, consultancy and more.', canonical: `${BASE}/tenders/index.html`, body: {
   hero: '<span class="eyebrow">Tenders · East Africa</span><h1>Find tenders in your line of business.</h1><p>Open tenders from official procurement portals and agencies across East Africa, grouped by what they buy.</p>',
-  main: `${tenderDirectory}<p class="notice">Categories: ${TENDER_CATEGORIES.map(([k, l]) => `${escapeHtml(l)} (${tenderCategoryTotals.get(k) ?? 0})`).join(' · ')}. Automated from tender titles; check each notice.</p>`,
+  main: `${picker}${tenderDirectory}<p class="notice">Categories: ${TENDER_CATEGORIES.map(([k, l]) => `${escapeHtml(l)} (${tenderCategoryTotals.get(k) ?? 0})`).join(' · ')}. Automated from tender titles; check each notice.</p>`,
 } }));
 tenderPaths.push('tenders/index.html');
 const currentTenders = new Set(tenderPaths.map((relative) => path.basename(relative)));
