@@ -10,9 +10,12 @@
     "export:for-you": "node src/export-for-you.js",
     "seo": "node src/seo.js",
     "indexnow": "node src/indexnow.js",
-    "test": "node tests/applicant-classifier.test.js && node tests/source-adapters.test.js && node tests/uganda-egp-title.test.js && node tests/rwanda-umucyo.test.js && node tests/ethiopia-egp.test.js && node tests/seo.test.js && node tests/site-data.test.js && node tests/fundsforngos-verify.test.js && node tests/tender-category.test.js && node tests/relay.test.js && node tests/drc.test.js && node tests/country-names.test.js && node tests/channel-post.test.js"
+    "test": "node tests/applicant-classifier.test.js && node tests/source-adapters.test.js && node tests/uganda-egp-title.test.js && node tests/rwanda-umucyo.test.js && node tests/ethiopia-egp.test.js && node tests/seo.test.js && node tests/site-data.test.js && node tests/fundsforngos-verify.test.js && node tests/tender-category.test.js && node tests/relay.test.js && node tests/drc.test.js && node tests/country-names.test.js && node tests/channel-post.test.js && node tests/browser.test.js"
   },
   "dependencies": {
     "fast-xml-parser": "^4.5.0"
+  },
+  "optionalDependencies": {
+    "playwright-core": "^1.60.0"
   }
 }

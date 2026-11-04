@@ -16,6 +16,8 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const RELAY_DIR = path.join(ROOT, 'data', 'relay');
 export const RELAY_MAX_AGE_HOURS = 12;
 
+// Sources fetched on the Mac. Browser-based sources (src/browser.js) go here
+// too, because GitHub's runners have no browser.
 export const RELAY_SOURCES = {
   reliefweb: fetchReliefWeb,
 };
@@ -45,6 +47,12 @@ export function withRelay(key, fetcher) {
   };
 }
 
+// For browser sources that never work from GitHub: read the relay file only.
+// Usage in pipeline.js: ['Some NGO', relayOnly('some-ngo')]
+export function relayOnly(key) {
+  return withRelay(key, async () => { throw new Error('browser source, fetched on the Mac'); });
+}
+
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   fs.mkdirSync(RELAY_DIR, { recursive: true });
   let failed = 0;
@@ -59,5 +67,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       console.log(`relay ${key}: FAILED ${e.message}`);
     }
   }
+  const { closeBrowser } = await import('./browser.js');
+  await closeBrowser();
   process.exit(failed ? 1 : 0);
 }
