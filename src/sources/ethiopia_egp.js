@@ -66,11 +66,20 @@ export async function fetchEthiopiaEgp() {
   let total = Infinity;
   for (let page = 0; page < MAX_PAGES && page * PAGE < total; page++) {
     const url = `${API}?type=all&top=${PAGE}&skip=${page * PAGE}&locale=en`;
-    const res = await fetchRetry(url, { headers: { Accept: 'application/json' }, extraCa: EXTRA_CA }, { timeoutMs: 90000 });
-    if (!res.ok) throw new Error(`HTTP ${res.status} on page ${page + 1}`);
     let data;
-    try { data = await res.json(); } catch { throw new Error(`non-JSON response on page ${page + 1}`); }
-    if (!Array.isArray(data?.items) || typeof data.total !== 'number') throw new Error('unexpected response shape');
+    try {
+      // The portal resets connections intermittently; give it more, slower retries.
+      const res = await fetchRetry(url, { headers: { Accept: 'application/json' }, extraCa: EXTRA_CA }, { timeoutMs: 90000, retries: 5, backoffMs: 5000 });
+      if (!res.ok) throw new Error(`HTTP ${res.status} on page ${page + 1}`);
+      try { data = await res.json(); } catch { throw new Error(`non-JSON response on page ${page + 1}`); }
+      if (!Array.isArray(data?.items) || typeof data.total !== 'number') throw new Error('unexpected response shape');
+    } catch (e) {
+      // Keep the pages we already have rather than losing the whole run;
+      // the pipeline reports the partial fetch as a warning.
+      if (!out.length) throw e;
+      out.partial = `stopped at page ${page + 1} of ${Math.ceil(total / PAGE)}: ${e.message.slice(0, 120)}`;
+      break;
+    }
     if (page === 0 && !data.items.length) throw new Error('no active tenders on page 1');
     total = data.total;
     for (const pkg of data.items) {

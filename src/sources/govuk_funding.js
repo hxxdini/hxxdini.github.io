@@ -95,10 +95,51 @@ export function parseGovUkFundingFeed(xml, today = new Date().toISOString().slic
   return entries.map((entry) => mapGovUkEntry(entry, today)).filter(Boolean);
 }
 
-export async function fetchGovUkFunding() {
-  const response = await fetchRetry(FEED_URL, {
-    headers: { Accept: 'application/atom+xml, application/xml;q=0.9, */*;q=0.8' },
+// The Atom feed only carries the newest 50 notices (mostly closed) and its
+// summaries rarely name countries, so open multi-country funds were missed.
+// The GOV.UK search API filters to open funds and carries structured
+// location tags, which is what we match East Africa against.
+const SEARCH_URL = 'https://www.gov.uk/api/search.json?filter_format=international_development_fund&filter_fund_state=open&count=500&fields=title,link,description,location,fund_state,eligible_entities,public_timestamp,development_sector';
+const EA_LOCATIONS = {
+  uganda: 'Uganda', kenya: 'Kenya', tanzania: 'Tanzania', rwanda: 'Rwanda', burundi: 'Burundi',
+  'south-sudan': 'South Sudan', ethiopia: 'Ethiopia', somalia: 'Somalia',
+  'democratic-republic-of-congo': 'Congo, Democratic Republic of',
+};
+
+export function mapGovUkSearchResult(result, today = new Date().toISOString().slice(0, 10)) {
+  const title = stripHtml(String(result?.title ?? ''));
+  const summary = stripHtml(String(result?.description ?? '')).slice(0, 1800);
+  const url = result?.link ? new URL(result.link, 'https://www.gov.uk').href : '';
+  const states = asArray(result?.fund_state);
+  if (!title || !url || (states.length && !states.includes('open'))) return null;
+  const countries = asArray(result?.location).map((slug) => EA_LOCATIONS[slug]).filter(Boolean);
+  if (!countries.length && !hasTargetScope(`${title} ${summary}`)) return null;
+  const publishedAt = parsedIsoDate(result?.public_timestamp);
+  const deadline = deadlineFromText(summary, publishedAt);
+  if (deadline && deadline < today) return null;
+  return enrich({
+    id: makeId(SOURCE, url),
+    source: SOURCE,
+    funder: 'UK Government (FCDO)',
+    title: title.slice(0, 300),
+    url,
+    summary,
+    countries,
+    type: inferredType(`${title} ${summary}`.toLowerCase()),
+    deadline,
+    published_at: publishedAt,
+    raw: { feed: 'GOV.UK search API', eligible: asArray(result?.eligible_entities) },
   });
-  if (!response.ok) throw new Error(`GOV.UK funding feed HTTP ${response.status}`);
-  return parseGovUkFundingFeed(await response.text());
+}
+
+export function parseGovUkSearch(json, today) {
+  const results = asArray(json?.results);
+  if (!Array.isArray(json?.results)) throw new Error('GOV.UK search: unexpected response shape');
+  return results.map((result) => mapGovUkSearchResult(result, today)).filter(Boolean);
+}
+
+export async function fetchGovUkFunding() {
+  const response = await fetchRetry(SEARCH_URL, { headers: { Accept: 'application/json' } });
+  if (!response.ok) throw new Error(`GOV.UK funding search HTTP ${response.status}`);
+  return parseGovUkSearch(await response.json());
 }

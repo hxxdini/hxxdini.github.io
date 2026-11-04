@@ -16,6 +16,7 @@ import { fetchAecf } from './sources/aecf.js';
 import { fetchReliefWeb } from './sources/reliefweb.js';
 import { fetchGovUkFunding } from './sources/govuk_funding.js';
 import { fetchGrantsGov } from './sources/grants_gov.js';
+import { withRelay } from './relay.js';
 import { verifyFundsForNgos, verifyWebRadarFundsForNgos, isCallPost } from './sources/fundsforngos_verify.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -35,7 +36,8 @@ const SOURCES = [
   ['Kenya PPIP', fetchKenyaTenders],
   ['Web Radar', fetchWebRadar],
   ['AECF (Africa Enterprise Challenge Fund)', fetchAecf],
-  ['ReliefWeb', fetchReliefWeb],
+  // ReliefWeb blocks GitHub runner IPs; falls back to data/relay/reliefweb.json pushed from hxxdini's Mac
+  ['ReliefWeb', withRelay('reliefweb', fetchReliefWeb)],
   ['UK International Development Funding Finder', fetchGovUkFunding],
   ['Grants.gov', fetchGrantsGov],
 ];
@@ -56,8 +58,8 @@ for (const [name, fetcher] of SOURCES) {
     added = after - before;
     totalNew += added;
     totalSeen += records.length;
-    perSource.push({ name, fetched: records.length, added, error: null });
-    console.log(`${records.length} fetched, ${added} new`);
+    perSource.push({ name, fetched: records.length, added, error: null, ...(records.partial ? { warning: `partial: ${records.partial}` } : {}) });
+    console.log(`${records.length} fetched, ${added} new${records.partial ? ` (PARTIAL: ${records.partial})` : ''}`);
   } catch (e) {
     perSource.push({ name, fetched: 0, added: 0, error: e.message });
     console.log(`FAILED: ${e.message}`);

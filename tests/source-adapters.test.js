@@ -139,3 +139,16 @@ assert.equal(mapReliefWebJob(rwItems[1], today), null);
 assert.match(FEED_URL, /^https:\/\/reliefweb\.int\/jobs\/rss\.xml\?advanced-search=\(TY264\)_\(C240\./);
 
 console.log('Source adapter tests: GOV.UK feed, Grants.gov, Uganda GPP and ReliefWeb RSS mapping passed');
+
+// GOV.UK search API: open funds matched on structured location tags
+import { parseGovUkSearch } from '../src/sources/govuk_funding.js';
+const ukSearch = parseGovUkSearch({ results: [
+  { title: 'Disability Rights Fund', link: '/international-development-funding/disability-rights-fund', description: 'Grants for organisations of persons with disabilities.', location: ['ethiopia', 'malawi', 'uganda'], fund_state: ['open'], public_timestamp: '2026-09-01T10:00:00Z' },
+  { title: 'Modern Slavery Fund Albania', link: '/international-development-funding/msf-albania', description: 'Call for proposals.', location: ['albania'], fund_state: ['open'] },
+  { title: 'Old Kenya call', link: '/international-development-funding/old', description: 'Closed call.', location: ['kenya'], fund_state: ['closed'] },
+] }, '2026-11-04');
+assert.equal(ukSearch.length, 1);
+assert.deepEqual(ukSearch[0].countries, ['Ethiopia', 'Uganda']);
+assert.equal(ukSearch[0].url, 'https://www.gov.uk/international-development-funding/disability-rights-fund');
+assert.throws(() => parseGovUkSearch({ error: 'x' }), /unexpected response shape/);
+console.log('GOV.UK search adapter tests passed');
