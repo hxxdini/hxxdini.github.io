@@ -20,6 +20,7 @@ import { fetchGrantsGov } from './sources/grants_gov.js';
 import { withRelay } from './relay.js';
 import { fetchDrc } from './sources/drc.js';
 import { fetchEnabel } from './sources/enabel.js';
+import { fetchKenyaRedCross } from './sources/kenya_redcross.js';
 import { verifyFundsForNgos, verifyWebRadarFundsForNgos, isCallPost } from './sources/fundsforngos_verify.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -46,6 +47,7 @@ const SOURCES = [
   // NGO and private buyers (not government portals)
   ['Danish Refugee Council (DRC)', fetchDrc],
   ['Enabel (Belgian development agency)', fetchEnabel],
+  ['Kenya Red Cross Society', fetchKenyaRedCross],
 ];
 
 const db = openDb();
