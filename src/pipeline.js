@@ -21,6 +21,7 @@ import { withRelay } from './relay.js';
 import { fetchDrc } from './sources/drc.js';
 import { fetchEnabel } from './sources/enabel.js';
 import { fetchKenyaRedCross } from './sources/kenya_redcross.js';
+import { fetchProsperGlobal } from './sources/prosper_global.js';
 import { verifyFundsForNgos, verifyWebRadarFundsForNgos, isCallPost } from './sources/fundsforngos_verify.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -48,6 +49,7 @@ const SOURCES = [
   ['Danish Refugee Council (DRC)', fetchDrc],
   ['Enabel (Belgian development agency)', fetchEnabel],
   ['Kenya Red Cross Society', fetchKenyaRedCross],
+  ['Prosper Global (formerly Mercy Corps)', fetchProsperGlobal],
 ];
 
 const db = openDb();
