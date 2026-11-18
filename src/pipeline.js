@@ -24,6 +24,7 @@ import { fetchKenyaRedCross } from './sources/kenya_redcross.js';
 import { fetchProsperGlobal } from './sources/prosper_global.js';
 import { fetchGoal } from './sources/goal.js';
 import { verifyFundsForNgos, verifyWebRadarFundsForNgos, isCallPost } from './sources/fundsforngos_verify.js';
+import { computeStaleSources, STALE_HOURS } from './stale.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SUMMARY_PATH = process.env.SUMMARY_PATH || path.join(ROOT, '.run-summary.json');
@@ -140,16 +141,12 @@ const stats = db.prepare(`
   FROM opportunities
 `).get();
 
-// Staleness watchdog: a source can rot silently (server outage, IP block) while
-// every individual run still "succeeds" — Kenya PPIP went dark for 2.5 days with
-// green CI before this existed. Flag any source whose newest last_seen is old.
-const STALE_HOURS = 48;
-const staleSources = db.prepare(`
+// Staleness watchdog lives in src/stale.js so it can be unit-tested; see note
+// there about why a healthy-but-empty source (0 EA rows today) is not stale.
+const latestBySource = db.prepare(`
   SELECT source, MAX(last_seen) AS latest FROM opportunities GROUP BY source
-`).all()
-  .map((r) => ({ source: r.source, hoursSince: (Date.now() - new Date(r.latest).getTime()) / 3600000 }))
-  .filter((r) => r.hoursSince > STALE_HOURS)
-  .map((r) => ({ source: r.source, days: Number((r.hoursSince / 24).toFixed(1)) }));
+`).all();
+const staleSources = computeStaleSources(latestBySource, perSource);
 
 console.log(`\nRun complete: ${totalSeen} records processed, ${totalNew} new.`);
 console.log(`Database: ${stats.total} opportunities | ${stats.ea} EA-relevant | ${stats.live} live on site.`);
