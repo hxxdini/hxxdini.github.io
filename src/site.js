@@ -6,7 +6,7 @@
 // is rendered client-side through esc(); only literal source names and computed
 // numbers/dates are ever interpolated server-side.
 import { PICKER_CSS, tenderPickerHtml } from './tender-picker.js';
-import { CONTACT, channelLink, whatsappLink } from './config.js';
+import { CONTACT, PRICES, channelLink, whatsappLink } from './config.js';
 import { externalLinksNewTab } from './external-links.js';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -84,7 +84,7 @@ function sparklineSvg(series) {
 
 const json = JSON.stringify(items).replace(/</g, '\\u003c');
 
-const html = `<title>BidRadar EA — Tender &amp; Funding Intelligence</title>
+const html = `<title>BidRadar EA — Open tenders across East Africa</title>
 <style>
   /* Same palette, type and masthead as the lead, funding and for-you pages (src/seo.js, docs/for-you.html). */
   :root {
@@ -164,7 +164,6 @@ const html = `<title>BidRadar EA — Tender &amp; Funding Intelligence</title>
 
   /* ---------- subscribe + brief ---------- */
   .pair { display: grid; gap: 12px; margin: 12px 0 22px; }
-  .subscribe-card iframe { width: 100%; max-width: 480px; display: block; margin-top: 6px; }
   .brief p:not(.section-kicker) { margin: 6px 0 0; color: #34463f; font-size: 14px; line-height: 1.6; }
 
   /* ---------- controls ---------- */
@@ -317,12 +316,12 @@ const html = `<title>BidRadar EA — Tender &amp; Funding Intelligence</title>
   </div>
   <div class="shell intro">
     <div>
-      <span class="eyebrow">East Africa · live funding feed</span>
-      <h1>Every open grant &amp; tender, <em>in one place.</em></h1>
-      <p class="intro-copy">Government e-procurement portals, multilateral tender systems and funder sites, checked several times a day. Every deadline links back to its source.</p>
+      <span class="eyebrow">East Africa · live tender feed</span>
+      <h1>Every open tender in East Africa, <em>in one place.</em></h1>
+      <p class="intro-copy">Government e-procurement portals in Uganda, Kenya, Rwanda and Ethiopia, plus World Bank, UN and NGO tenders, checked several times a day. Grants and fellowships too. Every deadline links back to its source.</p>
     </div>
     <div class="facts">
-      <div class="fact hero-fact"><b id="statLive">${items.length}</b><span>Live opportunities</span></div>
+      <div class="fact hero-fact"><b id="statLive">${items.length}</b><span>Open tenders &amp; calls</span></div>
       <div class="fact"><b>${nSources}</b><span>Sources watched</span></div>
       <div class="fact"><b>${nTotal.toLocaleString()}</b><span>Ever tracked</span></div>
       <div class="fact"><b><span class="live-dot"></span>${today}</b><span>Last swept</span></div>
@@ -342,21 +341,21 @@ const html = `<title>BidRadar EA — Tender &amp; Funding Intelligence</title>
 
   <div class="pair">
     <section class="panel brief">
-      <p class="section-kicker">Situation brief</p>
-      <h2>The money moved. We track where.</h2>
-      <p>With USAID gone and several European donors cutting budgets, what remains is scattered across portals nobody has time to check. We check them every day, and every listing links to its primary source.</p>
+      <p class="section-kicker">Why BidRadar</p>
+      <h2>Stop checking ten portals.</h2>
+      <p>Tenders are spread across national e-procurement sites, the World Bank, UNGM and NGO pages, and more than half of open tenders close within a week. We check them all several times a day, so you see them in time to bid.</p>
     </section>
-    <section class="panel subscribe-card">
-      <p class="section-kicker">Weekly digest</p>
-      <h2>Get new calls by email</h2>
-      <iframe src="https://fundradar.substack.com/embed?transparent=1" title="Subscribe to the BidRadar weekly digest" height="150" style="border:0; background:transparent;" frameborder="0" scrolling="no" loading="lazy"></iframe>
+    <section class="panel brief">
+      <p class="section-kicker">Matched alerts</p>
+      <h2>Only the tenders for your trade.</h2>
+      <p>Tell us your line of business and district, and get matching tenders on WhatsApp every morning. ${PRICES.alertsMonthly}. <a href="./alerts.html">See how alerts work</a></p>
     </section>
   </div>
 
   <div class="controls" id="results">
     <div class="search-wrap">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg>
-      <input type="search" id="q" placeholder="Search title, funder, sector…" aria-label="Search opportunities" enterkeyhint="search">
+      <input type="search" id="q" placeholder="Search tenders, buyers, sectors…" aria-label="Search tenders and calls" enterkeyhint="search">
     </div>
     <button class="toggle filter-btn" id="filterBtn" aria-expanded="false" aria-controls="sidebar"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="4" y1="7" x2="20" y2="7"></line><line x1="7" y1="12" x2="17" y2="12"></line><line x1="10" y1="17" x2="14" y2="17"></line></svg> Filters<span class="filter-badge" id="filterBadge" hidden></span></button>
   </div>
@@ -696,7 +695,7 @@ const fullDoc = `<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="BidRadar EA — every open grant, tender and opportunity relevant to East African organizations, tracked from primary sources and updated daily.">
+<meta name="description" content="BidRadar EA: every open tender in Uganda, Kenya, Rwanda, Ethiopia and across East Africa, plus grants and fellowships, tracked from primary sources and updated daily.">
 <meta name="theme-color" content="#102522">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📡</text></svg>">
 ${html.slice(0, styleEnd)}

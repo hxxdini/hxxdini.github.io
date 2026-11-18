@@ -1,8 +1,8 @@
-// Daily post to the public Telegram channel (@fundradarea): opportunities
+// Daily post to the public Telegram channel (@BidRadar): opportunities
 // first found in the last 24 hours, grouped by country (Uganda first), each
 // linking to its BidRadar lead page. Runs from .github/workflows/channel-post.yml.
 //
-// Env: TELEGRAM_BOT_TOKEN, TELEGRAM_CHANNEL_ID (e.g. @fundradarea).
+// Env: TELEGRAM_BOT_TOKEN, TELEGRAM_CHANNEL_ID (e.g. @BidRadar).
 // DRY_RUN=1 prints the message instead of sending it.
 import { openDb } from './db.js';
 import { canonicalCountries, detectTenderCategory, tenderCategoryLabel } from './normalize.js';

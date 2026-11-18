@@ -4,7 +4,7 @@ export const CONTACT = {
   phoneDisplay: '0785 287 446',
   phoneIntl: '256785287446',
   email: 'stordy007@gmail.com',
-  telegramChannel: 'fundradarea',
+  telegramChannel: 'BidRadar',
   momoDisplay: 'MTN MoMo 0785 287 446',
 };
 

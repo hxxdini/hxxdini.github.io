@@ -1,6 +1,6 @@
 name: channel-post
 
-# Daily digest to the public Telegram channel (@fundradarea) at 07:30 EAT,
+# Daily digest to the public Telegram channel (@BidRadar) at 07:30 EAT,
 # built from the database the pipeline bot committed. See src/channel-post.js.
 on:
   schedule:
