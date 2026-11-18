@@ -5,6 +5,7 @@ import { openDb } from './db.js';
 import { canonicalCountry, detectTenderCategory, tenderCategoryLabel, TENDER_CATEGORIES } from './normalize.js';
 import { PICKER_CSS, tenderPickerHtml } from './tender-picker.js';
 import { CONTACT, PRICES, channelLink, whatsappLink } from './config.js';
+import { externalLinksNewTab } from './external-links.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DOCS = path.join(ROOT, 'docs');
@@ -85,7 +86,7 @@ function document({ title, description, canonical, body, structured, noindex = f
 function write(relative, content) {
   const output = path.join(DOCS, relative);
   fs.mkdirSync(path.dirname(output), { recursive: true });
-  fs.writeFileSync(output, content);
+  fs.writeFileSync(output, relative.endsWith('.html') ? externalLinksNewTab(content) : content);
 }
 
 function leadPage(row) {

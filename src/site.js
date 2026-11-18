@@ -7,6 +7,7 @@
 // numbers/dates are ever interpolated server-side.
 import { PICKER_CSS, tenderPickerHtml } from './tender-picker.js';
 import { CONTACT, channelLink, whatsappLink } from './config.js';
+import { externalLinksNewTab } from './external-links.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -685,7 +686,7 @@ const html = `<title>FundRadar EA — Funding &amp; Tender Intelligence</title>
 
 fs.mkdirSync(path.join(ROOT, 'out'), { recursive: true });
 const outPath = path.join(ROOT, 'out', 'site.html');
-fs.writeFileSync(outPath, html);
+fs.writeFileSync(outPath, externalLinksNewTab(html));
 console.log(`Site written: ${outPath} (${items.length} live items embedded)`);
 
 // Full standalone document for GitHub Pages (the artifact host supplies its own shell)
@@ -706,5 +707,5 @@ ${html.slice(styleEnd)}
 </html>
 `;
 fs.mkdirSync(path.join(ROOT, 'docs'), { recursive: true });
-fs.writeFileSync(path.join(ROOT, 'docs', 'index.html'), fullDoc);
+fs.writeFileSync(path.join(ROOT, 'docs', 'index.html'), externalLinksNewTab(fullDoc));
 console.log('Pages doc written: docs/index.html');
