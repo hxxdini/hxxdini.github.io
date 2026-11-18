@@ -8,6 +8,13 @@ export const CONTACT = {
   momoDisplay: 'MTN MoMo 0785 287 446',
 };
 
+// Cloudflare Web Analytics beacon token (public: it ships in every page).
+// Empty means no analytics tag is added. Cookie-free, so no consent banner.
+export const ANALYTICS_TOKEN = '';
+export const analyticsTag = () => ANALYTICS_TOKEN
+  ? `<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "${ANALYTICS_TOKEN}"}'></script>`
+  : '';
+
 export const whatsappLink = (text) => `https://wa.me/${CONTACT.phoneIntl}?text=${encodeURIComponent(text)}`;
 export const channelLink = `https://t.me/${CONTACT.telegramChannel}`;
 

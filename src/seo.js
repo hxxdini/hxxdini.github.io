@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { openDb } from './db.js';
 import { canonicalCountry, detectTenderCategory, tenderCategoryLabel, TENDER_CATEGORIES } from './normalize.js';
 import { PICKER_CSS, tenderPickerHtml } from './tender-picker.js';
-import { CONTACT, PRICES, channelLink, whatsappLink } from './config.js';
+import { CONTACT, PRICES, analyticsTag, channelLink, whatsappLink } from './config.js';
 import { externalLinksNewTab } from './external-links.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -80,7 +80,7 @@ const css = `:root{--ink:#102522;--muted:#65736e;--paper:#f3f5ef;--surface:#fff;
 function document({ title, description, canonical, body, structured, noindex = false }) {
   const text = escapeHtml(title);
   const descriptionText = escapeHtml(description);
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#102522"><title>${text} · BidRadar EA</title><meta name="description" content="${descriptionText}"><link rel="canonical" href="${escapeHtml(canonical)}"><meta property="og:type" content="article"><meta property="og:title" content="${text} · BidRadar EA"><meta property="og:description" content="${descriptionText}"><meta property="og:url" content="${escapeHtml(canonical)}">${noindex ? '<meta name="robots" content="noindex,follow">' : ''}${structured ? `<script type="application/ld+json">${structured}</script>` : ''}<style>${css}</style></head><body><header class="mast"><div class="shell bar"><a class="brand" href="/index.html"><span class="mark">B</span>BidRadar EA</a><a href="/for-you.html">Find calls for you ↗</a></div><div class="shell hero">${body.hero}</div></header><main class="shell">${body.main}</main><footer><div class="shell">BidRadar is a discovery guide. Verify deadlines, terms and eligibility with the original source. <a href="/index.html">Full feed</a> · <a href="/funding/index.html">Browse by country and audience</a> · <a href="/tenders/index.html">Tenders by category</a> · <a href="/bid-desk.html">Bid Desk</a> · <a href="/alerts.html">Alerts</a></div></footer></body></html>\n`;
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#102522"><title>${text} · BidRadar EA</title><meta name="description" content="${descriptionText}"><link rel="canonical" href="${escapeHtml(canonical)}"><meta property="og:type" content="article"><meta property="og:title" content="${text} · BidRadar EA"><meta property="og:description" content="${descriptionText}"><meta property="og:url" content="${escapeHtml(canonical)}">${noindex ? '<meta name="robots" content="noindex,follow">' : ''}${structured ? `<script type="application/ld+json">${structured}</script>` : ''}<style>${css}</style>${analyticsTag()}</head><body><header class="mast"><div class="shell bar"><a class="brand" href="/index.html"><span class="mark">B</span>BidRadar EA</a><a href="/for-you.html">Find calls for you ↗</a></div><div class="shell hero">${body.hero}</div></header><main class="shell">${body.main}</main><footer><div class="shell">BidRadar is a discovery guide. Verify deadlines, terms and eligibility with the original source. <a href="/index.html">Full feed</a> · <a href="/funding/index.html">Browse by country and audience</a> · <a href="/tenders/index.html">Tenders by category</a> · <a href="/bid-desk.html">Bid Desk</a> · <a href="/alerts.html">Alerts</a></div></footer></body></html>\n`;
 }
 
 function write(relative, content) {
@@ -270,3 +270,14 @@ const sitemapPaths = ['index.html', 'for-you.html', ...offerPaths, ...leadPaths,
 write('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sitemapPaths.map((relative) => `  <url><loc>${BASE}/${escapeHtml(relative)}</loc></url>`).join('\n')}\n</urlset>\n`);
 write('robots.txt', `User-agent: *\nAllow: /\nSitemap: ${BASE}/sitemap.xml\n`);
 console.log(`SEO pages: ${leadPaths.length} live leads, ${landingPaths.length} landing pages, ${tenderPaths.length} tender category pages, ${sitemapPaths.length} sitemap URLs`);
+
+// docs/for-you.html is hand-written; keep its analytics slot in step with config.
+{
+  const file = path.join(DOCS, 'for-you.html');
+  const page = fs.readFileSync(file, 'utf8');
+  const slot = `<!-- analytics -->${analyticsTag()}<!-- /analytics -->`;
+  const next = page.includes('<!-- analytics -->')
+    ? page.replace(/<!-- analytics -->[\s\S]*?<!-- \/analytics -->/, slot)
+    : page.replace('</head>', `${slot}\n</head>`);
+  if (next !== page) fs.writeFileSync(file, next);
+}

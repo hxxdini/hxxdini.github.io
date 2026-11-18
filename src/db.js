@@ -33,6 +33,13 @@ export function openDb() {
     CREATE INDEX IF NOT EXISTS idx_opp_deadline ON opportunities(deadline);
     CREATE INDEX IF NOT EXISTS idx_opp_source ON opportunities(source);
     CREATE INDEX IF NOT EXISTS idx_opp_ea ON opportunities(ea_relevant);
+    -- Last time each source was fetched and parsed without error, even if it
+    -- had nothing in scope. Lets the stale check tell "quiet" from "broken".
+    CREATE TABLE IF NOT EXISTS source_health (
+      source     TEXT PRIMARY KEY,
+      last_ok    TEXT NOT NULL,
+      last_count INTEGER NOT NULL
+    );
   `);
 
   const columns = new Set(db.prepare('PRAGMA table_info(opportunities)').all().map((column) => column.name));

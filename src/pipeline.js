@@ -58,6 +58,10 @@ const db = openDb();
 let totalNew = 0;
 let totalSeen = 0;
 const perSource = [];
+const markSourceOk = db.prepare(`
+  INSERT INTO source_health (source, last_ok, last_count) VALUES (?, ?, ?)
+  ON CONFLICT(source) DO UPDATE SET last_ok = excluded.last_ok, last_count = excluded.last_count
+`);
 
 for (const [name, fetcher] of SOURCES) {
   process.stdout.write(`→ ${name} ... `);
@@ -70,6 +74,7 @@ for (const [name, fetcher] of SOURCES) {
     added = after - before;
     totalNew += added;
     totalSeen += records.length;
+    markSourceOk.run(name, new Date().toISOString(), records.length);
     perSource.push({ name, fetched: records.length, added, error: null, ...(records.partial ? { warning: `partial: ${records.partial}` } : {}) });
     console.log(`${records.length} fetched, ${added} new${records.partial ? ` (PARTIAL: ${records.partial})` : ''}`);
   } catch (e) {
@@ -142,10 +147,14 @@ const stats = db.prepare(`
 
 // Staleness watchdog: a source can rot silently (server outage, IP block) while
 // every individual run still "succeeds" — Kenya PPIP went dark for 2.5 days with
-// green CI before this existed. Flag any source whose newest last_seen is old.
+// green CI before this existed. Flag any source with neither a successful fetch
+// (source_health) nor a fresh row (last_seen, which relayed sources update) in
+// 48h. A source that fetched fine but had nothing in East Africa is quiet, not stale.
 const STALE_HOURS = 48;
 const staleSources = db.prepare(`
-  SELECT source, MAX(last_seen) AS latest FROM opportunities GROUP BY source
+  SELECT o.source, MAX(MAX(o.last_seen), COALESCE(h.last_ok, '')) AS latest
+  FROM opportunities o LEFT JOIN source_health h ON h.source = o.source
+  GROUP BY o.source
 `).all()
   .map((r) => ({ source: r.source, hoursSince: (Date.now() - new Date(r.latest).getTime()) / 3600000 }))
   .filter((r) => r.hoursSince > STALE_HOURS)

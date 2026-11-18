@@ -6,7 +6,7 @@
 // is rendered client-side through esc(); only literal source names and computed
 // numbers/dates are ever interpolated server-side.
 import { PICKER_CSS, tenderPickerHtml } from './tender-picker.js';
-import { CONTACT, PRICES, channelLink, whatsappLink } from './config.js';
+import { CONTACT, PRICES, analyticsTag, channelLink, whatsappLink } from './config.js';
 import { externalLinksNewTab } from './external-links.js';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -699,6 +699,7 @@ const fullDoc = `<!doctype html>
 <meta name="theme-color" content="#102522">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📡</text></svg>">
 ${html.slice(0, styleEnd)}
+${analyticsTag()}
 </head>
 <body>
 ${html.slice(styleEnd)}
