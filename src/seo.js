@@ -16,8 +16,8 @@ const picker = `<style>${PICKER_CSS}</style>${tenderPickerHtml()}`;
 // Help-to-win box on lead and tender pages, pointing to the Bid Desk.
 function helpBox(row) {
   const kind = row?.type === 'grant' || row?.type === 'fellowship' || row?.type === 'prize' ? 'application' : 'bid';
-  const message = row ? `Hello FundRadar, I want help with this ${kind}: ${row.title} ${BASE}/lead/${row.id}.html` : 'Hello FundRadar, I want help with a bid or proposal.';
-  return `<aside class="panel"><span class="kicker">FundRadar Bid Desk</span><h2>Want help to win this?</h2><p>We check or prepare your ${kind} documents so you submit a complete, compliant ${kind} on time. Bid check ${escapeHtml(PRICES.bidReview)} · bid preparation ${escapeHtml(PRICES.bidPrep)}.</p><p class="actions"><a class="cta" href="${escapeHtml(whatsappLink(message))}" rel="noopener">WhatsApp ${escapeHtml(CONTACT.phoneDisplay)} ↗</a><a class="cta ghost" href="/bid-desk.html">How the Bid Desk works</a></p></aside>`;
+  const message = row ? `Hello BidRadar, I want help with this ${kind}: ${row.title} ${BASE}/lead/${row.id}.html` : 'Hello BidRadar, I want help with a bid or proposal.';
+  return `<aside class="panel"><span class="kicker">BidRadar Bid Desk</span><h2>Want help to win this?</h2><p>We check or prepare your ${kind} documents so you submit a complete, compliant ${kind} on time. Bid check ${escapeHtml(PRICES.bidReview)} · bid preparation ${escapeHtml(PRICES.bidPrep)}.</p><p class="actions"><a class="cta" href="${escapeHtml(whatsappLink(message))}" rel="noopener">WhatsApp ${escapeHtml(CONTACT.phoneDisplay)} ↗</a><a class="cta ghost" href="/bid-desk.html">How the Bid Desk works</a></p></aside>`;
 }
 const channelBox = `<aside class="panel"><span class="kicker">Free daily alerts</span><h2>Get new tenders on Telegram every morning</h2><p>New tenders and grants across East Africa, posted at 7:30 every day.</p><p class="actions"><a class="cta" href="${channelLink}" rel="noopener">Join @${CONTACT.telegramChannel} ↗</a><a class="cta ghost" href="/alerts.html">Alerts for your business only</a></p></aside>`;
 const labels = {
@@ -57,7 +57,7 @@ function leadPath(id) {
 
 function summary(row) {
   const clean = String(row.summary ?? '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-  if (!clean) return 'FundRadar has no verified summary for this listing. Check the original source for the full notice and eligibility.';
+  if (!clean) return 'BidRadar has no verified summary for this listing. Check the original source for the full notice and eligibility.';
   if (clean.length <= 350) return clean;
   return `${clean.slice(0, 350).replace(/\s+\S*$/, '')}…`;
 }
@@ -80,7 +80,7 @@ const css = `:root{--ink:#102522;--muted:#65736e;--paper:#f3f5ef;--surface:#fff;
 function document({ title, description, canonical, body, structured, noindex = false }) {
   const text = escapeHtml(title);
   const descriptionText = escapeHtml(description);
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#102522"><title>${text} · FundRadar EA</title><meta name="description" content="${descriptionText}"><link rel="canonical" href="${escapeHtml(canonical)}"><meta property="og:type" content="article"><meta property="og:title" content="${text} · FundRadar EA"><meta property="og:description" content="${descriptionText}"><meta property="og:url" content="${escapeHtml(canonical)}">${noindex ? '<meta name="robots" content="noindex,follow">' : ''}${structured ? `<script type="application/ld+json">${structured}</script>` : ''}<style>${css}</style></head><body><header class="mast"><div class="shell bar"><a class="brand" href="/index.html"><span class="mark">F</span>FundRadar EA</a><a href="/for-you.html">Find calls for you ↗</a></div><div class="shell hero">${body.hero}</div></header><main class="shell">${body.main}</main><footer><div class="shell">FundRadar is a discovery guide. Verify deadlines, terms and eligibility with the original source. <a href="/index.html">Full feed</a> · <a href="/funding/index.html">Browse by country and audience</a> · <a href="/tenders/index.html">Tenders by category</a> · <a href="/bid-desk.html">Bid Desk</a> · <a href="/alerts.html">Alerts</a></div></footer></body></html>\n`;
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#102522"><title>${text} · BidRadar EA</title><meta name="description" content="${descriptionText}"><link rel="canonical" href="${escapeHtml(canonical)}"><meta property="og:type" content="article"><meta property="og:title" content="${text} · BidRadar EA"><meta property="og:description" content="${descriptionText}"><meta property="og:url" content="${escapeHtml(canonical)}">${noindex ? '<meta name="robots" content="noindex,follow">' : ''}${structured ? `<script type="application/ld+json">${structured}</script>` : ''}<style>${css}</style></head><body><header class="mast"><div class="shell bar"><a class="brand" href="/index.html"><span class="mark">B</span>BidRadar EA</a><a href="/for-you.html">Find calls for you ↗</a></div><div class="shell hero">${body.hero}</div></header><main class="shell">${body.main}</main><footer><div class="shell">BidRadar is a discovery guide. Verify deadlines, terms and eligibility with the original source. <a href="/index.html">Full feed</a> · <a href="/funding/index.html">Browse by country and audience</a> · <a href="/tenders/index.html">Tenders by category</a> · <a href="/bid-desk.html">Bid Desk</a> · <a href="/alerts.html">Alerts</a></div></footer></body></html>\n`;
 }
 
 function write(relative, content) {
@@ -108,7 +108,7 @@ function leadPage(row) {
     ['Who can apply', row.applicant_type === 'unknown' ? 'Not confirmed' : `${applicant} (automated tag; check source)`],
     ['Countries', countries.join(', ') || 'Regional / not specified'],
   ];
-  const main = `<article class="panel"><dl class="details">${details.map(([label, value]) => `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd></div>`).join('')}</dl><h2>About this opportunity</h2><p>${escapeHtml(description)}</p>${eligibility.length ? `<p class="notice">Eligibility labels: ${escapeHtml(eligibility.join(', '))}. Confirm with the source.</p>` : ''}${documents.length ? `<h2>Call documents</h2><ul class="docs">${documents.map((doc) => `<li><a href="${escapeHtml(safeUrl(doc.url))}" rel="noopener noreferrer">${escapeHtml(doc.label || 'Document')}</a></li>`).join('')}</ul>` : ''}<p class="actions">${official ? `<a class="cta" href="${escapeHtml(official)}" rel="noopener noreferrer">Official call ↗</a>` : ''}${source ? `<a class="${official ? 'cta ghost' : 'cta'}" href="${escapeHtml(source)}" rel="noopener noreferrer">View source listing ↗</a>` : ''}</p>${!official && !source ? '<p class="notice">Source link unavailable; verify before applying.</p>' : ''}${row.verified_at ? `<p class="notice">Checked ${escapeHtml(row.verified_at.slice(0, 10))}: FundRadar read the full call text${official ? ' and found the funder\'s own page' : ''}. Still confirm details with the funder before applying.</p>` : ''}<p class="notice">Source: ${escapeHtml(row.source)}. FundRadar links to the source listing; it does not accept applications.</p></article>${helpBox(row)}`;
+  const main = `<article class="panel"><dl class="details">${details.map(([label, value]) => `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd></div>`).join('')}</dl><h2>About this opportunity</h2><p>${escapeHtml(description)}</p>${eligibility.length ? `<p class="notice">Eligibility labels: ${escapeHtml(eligibility.join(', '))}. Confirm with the source.</p>` : ''}${documents.length ? `<h2>Call documents</h2><ul class="docs">${documents.map((doc) => `<li><a href="${escapeHtml(safeUrl(doc.url))}" rel="noopener noreferrer">${escapeHtml(doc.label || 'Document')}</a></li>`).join('')}</ul>` : ''}<p class="actions">${official ? `<a class="cta" href="${escapeHtml(official)}" rel="noopener noreferrer">Official call ↗</a>` : ''}${source ? `<a class="${official ? 'cta ghost' : 'cta'}" href="${escapeHtml(source)}" rel="noopener noreferrer">View source listing ↗</a>` : ''}</p>${!official && !source ? '<p class="notice">Source link unavailable; verify before applying.</p>' : ''}${row.verified_at ? `<p class="notice">Checked ${escapeHtml(row.verified_at.slice(0, 10))}: BidRadar read the full call text${official ? ' and found the funder\'s own page' : ''}. Still confirm details with the funder before applying.</p>` : ''}<p class="notice">Source: ${escapeHtml(row.source)}. BidRadar links to the source listing; it does not accept applications.</p></article>${helpBox(row)}`;
   write(relative, document({ title: row.title, description, canonical,
     structured: jsonLd(row, canonical, description), body: {
       hero: `<span class="eyebrow">${escapeHtml(singular[row.type] ?? 'Opportunity')} · ${escapeHtml(row.source)}</span><h1>${escapeHtml(row.title)}</h1><p>${escapeHtml(row.funder || row.source)}</p>`, main,
@@ -119,7 +119,7 @@ function leadPage(row) {
 
 function landingPage(relative, title, rows, intro) {
   const canonical = `${BASE}/${relative}`;
-  const description = `${title}: ${rows.length} current FundRadar listings. Confirm each opportunity with its original source.`;
+  const description = `${title}: ${rows.length} current BidRadar listings. Confirm each opportunity with its original source.`;
   const cards = rows.map((row) => `<article class="card"><span class="kicker">${escapeHtml(kinds[row.type] ?? 'Opportunities')} · ${escapeHtml(row.source)}</span><h2><a href="/${leadPath(row.id)}">${escapeHtml(row.title)}</a></h2><p>${escapeHtml(row.funder || 'Funder not specified')} · Deadline: ${escapeHtml(row.deadline || 'not listed')}</p></article>`).join('');
   write(relative, document({ title, description, canonical, body: {
     hero: `<span class="eyebrow">Explore funding · East Africa</span><h1>${escapeHtml(title)}</h1><p>${escapeHtml(intro)}</p>`,
@@ -142,7 +142,7 @@ for (const file of fs.readdirSync(leadDir).filter((name) => name.endsWith('.html
   const id = file.slice(0, -5);
   if (live.has(id)) continue;
   const relative = `lead/${file}`;
-  write(relative, document({ title: 'Opportunity no longer current', description: 'This listing is no longer in the current FundRadar feed.', canonical: `${BASE}/${relative}`, noindex: true,
+  write(relative, document({ title: 'Opportunity no longer current', description: 'This listing is no longer in the current BidRadar feed.', canonical: `${BASE}/${relative}`, noindex: true,
     body: { hero: '<span class="eyebrow">Closed / unverified</span><h1>This opportunity is no longer current.</h1>', main: '<div class="panel"><p>Its deadline passed or it is no longer in our recent feed. Check the original publisher before acting.</p><a class="cta" href="/for-you.html">Find current calls ↗</a></div>' },
   }));
 }
@@ -173,7 +173,7 @@ for (const [key, group] of groups) {
     `Current ${kind.toLowerCase()} tagged for ${audience} in ${country}. These automated tags help discovery; the original notice determines actual eligibility.`));
 }
 const directory = [...countryGroups.keys()].sort().map((country) => `<a href="/funding/${slug(country)}.html">${escapeHtml(country)}</a>`).join('');
-write('funding/index.html', document({ title: 'Browse funding by country and audience', description: 'Explore FundRadar funding listings by country and applicant type.', canonical: `${BASE}/funding/index.html`, body: {
+write('funding/index.html', document({ title: 'Browse funding by country and audience', description: 'Explore BidRadar funding listings by country and applicant type.', canonical: `${BASE}/funding/index.html`, body: {
   hero: '<span class="eyebrow">Explore funding · East Africa</span><h1>Find a starting point.</h1><p>Browse current calls by country, then follow each lead to its original publisher.</p>',
   main: `${picker}<section class="panel"><h2>Countries</h2><div class="links">${directory}</div><p class="notice">Country and audience pages reflect only currently tagged leads. Eligibility must be verified with the publisher.</p></section>`,
 } }));
@@ -182,7 +182,7 @@ const currentLandings = new Set(landingPaths.map((relative) => path.basename(rel
 for (const file of fs.readdirSync(path.join(DOCS, 'funding')).filter((name) => name.endsWith('.html'))) {
   if (currentLandings.has(file)) continue;
   const relative = `funding/${file}`;
-  write(relative, document({ title: 'No current listings', description: 'This FundRadar category has no current listings.', canonical: `${BASE}/${relative}`, noindex: true,
+  write(relative, document({ title: 'No current listings', description: 'This BidRadar category has no current listings.', canonical: `${BASE}/${relative}`, noindex: true,
     body: { hero: '<span class="eyebrow">Category update</span><h1>No current listings here.</h1>', main: '<div class="panel"><p>These listings are no longer current. Browse other categories for live opportunities.</p><a class="cta" href="/funding/index.html">Browse current categories ↗</a></div>' },
   }));
 }
@@ -226,7 +226,7 @@ const currentTenders = new Set(tenderPaths.map((relative) => path.basename(relat
 for (const file of fs.readdirSync(path.join(DOCS, 'tenders')).filter((name) => name.endsWith('.html'))) {
   if (currentTenders.has(file)) continue;
   const relative = `tenders/${file}`;
-  write(relative, document({ title: 'No open tenders here right now', description: 'This FundRadar tender category has no open listings.', canonical: `${BASE}/${relative}`, noindex: true,
+  write(relative, document({ title: 'No open tenders here right now', description: 'This BidRadar tender category has no open listings.', canonical: `${BASE}/${relative}`, noindex: true,
     body: { hero: '<span class="eyebrow">Category update</span><h1>No open tenders here right now.</h1>', main: '<div class="panel"><p>These tenders have closed. Browse other categories for open tenders.</p><a class="cta" href="/tenders/index.html">Browse open tenders ↗</a></div>' },
   }));
 }
@@ -234,9 +234,9 @@ for (const file of fs.readdirSync(path.join(DOCS, 'tenders')).filter((name) => n
 
 // Paid services. Contact and prices live in src/config.js.
 const steps = (items) => `<ol class="docs">${items.map((i) => `<li>${i}</li>`).join('')}</ol>`;
-const waBid = whatsappLink('Hello FundRadar Bid Desk, I want help with a tender/grant. Link: ');
-write('bid-desk.html', document({ title: 'Bid Desk: help writing tenders and grant proposals', description: `FundRadar Bid Desk checks and prepares tender bids and grant proposals for businesses, schools and NGOs in Uganda and East Africa. WhatsApp ${CONTACT.phoneDisplay}.`, canonical: `${BASE}/bid-desk.html`, body: {
-  hero: `<span class="eyebrow">FundRadar Bid Desk</span><h1>Found a tender or grant? Let us help you win it.</h1><p>Many bids are rejected for a missing form, a wrong format or a late submission, not for price. We make sure yours is complete, compliant and on time.</p><p class="actions"><a class="cta" style="background:#d5f36b;color:#102522" href="${escapeHtml(waBid)}" rel="noopener">WhatsApp ${escapeHtml(CONTACT.phoneDisplay)} ↗</a></p>`,
+const waBid = whatsappLink('Hello BidRadar Bid Desk, I want help with a tender/grant. Link: ');
+write('bid-desk.html', document({ title: 'Bid Desk: help writing tenders and grant proposals', description: `BidRadar Bid Desk checks and prepares tender bids and grant proposals for businesses, schools and NGOs in Uganda and East Africa. WhatsApp ${CONTACT.phoneDisplay}.`, canonical: `${BASE}/bid-desk.html`, body: {
+  hero: `<span class="eyebrow">BidRadar Bid Desk</span><h1>Found a tender or grant? Let us help you win it.</h1><p>Many bids are rejected for a missing form, a wrong format or a late submission, not for price. We make sure yours is complete, compliant and on time.</p><p class="actions"><a class="cta" style="background:#d5f36b;color:#102522" href="${escapeHtml(waBid)}" rel="noopener">WhatsApp ${escapeHtml(CONTACT.phoneDisplay)} ↗</a></p>`,
   main: `<section class="list">
 <article class="card"><span class="kicker">${escapeHtml(PRICES.bidReview)}</span><h2>Bid check</h2><p>You prepare the bid; we review every document against the tender's requirements and evaluation criteria, and send a list of fixes within 48 hours.</p></article>
 <article class="card"><span class="kicker">${escapeHtml(PRICES.bidPrep)}</span><h2>Bid preparation</h2><p>We prepare the bid with you: compliance checklist, completed forms, technical proposal or method statement, work plan and price schedule template. Ideal for construction, supplies, ICT and consultancy tenders.</p></article>
@@ -251,9 +251,9 @@ write('bid-desk.html', document({ title: 'Bid Desk: help writing tenders and gra
 <section class="panel"><h2>Find a tender first</h2><p>Browse open tenders by country and line of business, or get new ones every morning on Telegram.</p><p class="actions"><a class="cta" href="/tenders/index.html">Open tenders</a><a class="cta ghost" href="${channelLink}" rel="noopener">Join @${CONTACT.telegramChannel} ↗</a></p></section>`,
 } }));
 
-const waAlerts = whatsappLink('Hello FundRadar, I want tender alerts. My business: ... Categories: ... Country/district: ...');
+const waAlerts = whatsappLink('Hello BidRadar, I want tender alerts. My business: ... Categories: ... Country/district: ...');
 write('alerts.html', document({ title: 'Tender alerts for your business', description: 'Free daily East Africa tender alerts on Telegram, or paid alerts matched to your line of business and area.', canonical: `${BASE}/alerts.html`, body: {
-  hero: `<span class="eyebrow">FundRadar alerts</span><h1>Never miss a tender in your line of business.</h1><p>Start free on Telegram, or get alerts matched to exactly what you supply.</p>`,
+  hero: `<span class="eyebrow">BidRadar alerts</span><h1>Never miss a tender in your line of business.</h1><p>Start free on Telegram, or get alerts matched to exactly what you supply.</p>`,
   main: `<section class="list">
 <article class="card"><span class="kicker">Free</span><h2>Daily channel</h2><p>Every morning at 7:30: new tenders and grants across East Africa, grouped by country, with links to each notice.</p><p class="actions" style="margin-top:12px"><a class="cta" href="${channelLink}" rel="noopener">Join @${CONTACT.telegramChannel} ↗</a></p></article>
 <article class="card"><span class="kicker">${escapeHtml(PRICES.alertsMonthly)} · ${escapeHtml(PRICES.alertsYearly)}</span><h2>Matched alerts</h2><p>Only the tenders that fit you: your categories (e.g. construction, ICT, medical supplies), your countries and districts. Sent the same day they appear, with a reminder 3 days before each deadline.</p><p class="actions" style="margin-top:12px"><a class="cta" href="${escapeHtml(waAlerts)}" rel="noopener">Request on WhatsApp ↗</a></p></article>

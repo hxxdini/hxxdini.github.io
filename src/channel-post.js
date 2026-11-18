@@ -1,6 +1,6 @@
 // Daily post to the public Telegram channel (@fundradarea): opportunities
 // first found in the last 24 hours, grouped by country (Uganda first), each
-// linking to its FundRadar lead page. Runs from .github/workflows/channel-post.yml.
+// linking to its BidRadar lead page. Runs from .github/workflows/channel-post.yml.
 //
 // Env: TELEGRAM_BOT_TOKEN, TELEGRAM_CHANNEL_ID (e.g. @fundradarea).
 // DRY_RUN=1 prints the message instead of sending it.

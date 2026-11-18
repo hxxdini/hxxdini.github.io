@@ -1,4 +1,4 @@
-// Public business details for FundRadar's paid services. Approved for
+// Public business details for BidRadar's paid services. Approved for
 // publication by hxxdini on 2026-11-04. Change them here only.
 export const CONTACT = {
   phoneDisplay: '0785 287 446',

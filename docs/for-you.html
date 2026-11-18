@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#102522">
-  <meta name="description" content="Find open FundRadar opportunities matched to your applicant type and country.">
-  <title>Find calls for you · FundRadar EA</title>
+  <meta name="description" content="Find open BidRadar opportunities matched to your applicant type and country.">
+  <title>Find calls for you · BidRadar EA</title>
   <style>
     :root {
       color-scheme: light;
@@ -119,7 +119,7 @@
   <a class="skip-link" href="#main">Skip to opportunities</a>
   <header class="masthead">
     <div class="shell topbar">
-      <a class="brand" href="./index.html" aria-label="FundRadar EA home"><span class="brand-mark" aria-hidden="true">F</span><span>FundRadar <small>EA</small></span></a>
+      <a class="brand" href="./index.html" aria-label="BidRadar EA home"><span class="brand-mark" aria-hidden="true">B</span><span>BidRadar <small>EA</small></span></a>
       <a class="back-link" href="./index.html">Full feed <span aria-hidden="true">↗</span></a>
     </div>
     <div class="intro">
@@ -167,7 +167,7 @@
     <div class="load-state" id="load-error" role="alert" hidden>We couldn’t load the live list. Please check your connection and refresh the page.</div>
   </main>
 
-  <footer><div class="shell">Eligibility labels are a guide, not a guarantee. Confirm requirements and deadlines with each original source. <a href="./index.html">Browse the full FundRadar feed</a>.</div></footer>
+  <footer><div class="shell">Eligibility labels are a guide, not a guarantee. Confirm requirements and deadlines with each original source. <a href="./index.html">Browse the full BidRadar feed</a>.</div></footer>
 
   <script>
     (function () {
@@ -297,7 +297,7 @@
         top.className = 'card-top';
         var source = document.createElement('span');
         source.className = 'source';
-        source.textContent = lead.source || 'FundRadar source';
+        source.textContent = lead.source || 'BidRadar source';
         var deadline = document.createElement('span');
         var due = deadlineText(lead.deadline);
         deadline.className = 'deadline' + (due.noDate ? ' no-date' : '');
@@ -399,7 +399,7 @@
           var generated = data.generatedAt ? new Date(data.generatedAt) : null;
           updated.textContent = generated && !Number.isNaN(generated.getTime())
             ? 'Updated ' + new Intl.DateTimeFormat('en', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(generated)
-            : 'Live FundRadar data';
+            : 'Live BidRadar data';
           document.getElementById('feed-facts').replaceChildren(total, updated);
           makeProfileButtons();
           makeCountryOptions();

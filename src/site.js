@@ -84,7 +84,7 @@ function sparklineSvg(series) {
 
 const json = JSON.stringify(items).replace(/</g, '\\u003c');
 
-const html = `<title>FundRadar EA — Funding &amp; Tender Intelligence</title>
+const html = `<title>BidRadar EA — Tender &amp; Funding Intelligence</title>
 <style>
   /* Same palette, type and masthead as the lead, funding and for-you pages (src/seo.js, docs/for-you.html). */
   :root {
@@ -308,7 +308,7 @@ const html = `<title>FundRadar EA — Funding &amp; Tender Intelligence</title>
 <a class="skip-link" href="#results">Skip to opportunities</a>
 <header class="masthead">
   <div class="shell topbar">
-    <a class="brand" href="./index.html" aria-label="FundRadar EA home"><span class="brand-mark" aria-hidden="true">F</span><span>FundRadar <small>EA</small></span></a>
+    <a class="brand" href="./index.html" aria-label="BidRadar EA home"><span class="brand-mark" aria-hidden="true">B</span><span>BidRadar <small>EA</small></span></a>
     <nav class="top-links" aria-label="Site">
       <a class="pill-link" href="./tenders/index.html">Tenders</a>
       <a class="pill-link" href="./funding/index.html">By country</a>
@@ -349,7 +349,7 @@ const html = `<title>FundRadar EA — Funding &amp; Tender Intelligence</title>
     <section class="panel subscribe-card">
       <p class="section-kicker">Weekly digest</p>
       <h2>Get new calls by email</h2>
-      <iframe src="https://fundradar.substack.com/embed?transparent=1" title="Subscribe to the FundRadar weekly digest" height="150" style="border:0; background:transparent;" frameborder="0" scrolling="no" loading="lazy"></iframe>
+      <iframe src="https://fundradar.substack.com/embed?transparent=1" title="Subscribe to the BidRadar weekly digest" height="150" style="border:0; background:transparent;" frameborder="0" scrolling="no" loading="lazy"></iframe>
     </section>
   </div>
 
@@ -409,7 +409,7 @@ const html = `<title>FundRadar EA — Funding &amp; Tender Intelligence</title>
         ${sourceMeta.map((s) => `<div class="ledger-row"><span class="lg-name">${s.source}</span><span class="lg-meta">${s.total} tracked · ${s.latest.slice(0, 16).replace('T', ' ')}</span></div>`).join('')}
       </div>
     </details>
-    <p class="fine">FundRadar monitors government e-procurement portals, multilateral tender systems and web-wide
+    <p class="fine">BidRadar monitors government e-procurement portals, multilateral tender systems and web-wide
     discovery feeds daily. Sector and eligibility tags are automated; deadlines come from structured source data or the full
     call text where available. <b>Always verify against the linked source before applying.</b>
     <a href="./for-you.html">Find calls for you</a> · <a href="./funding/index.html">Browse by country and audience</a></p>
@@ -696,7 +696,7 @@ const fullDoc = `<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="FundRadar EA — every open grant, tender and opportunity relevant to East African organizations, tracked from primary sources and updated daily.">
+<meta name="description" content="BidRadar EA — every open grant, tender and opportunity relevant to East African organizations, tracked from primary sources and updated daily.">
 <meta name="theme-color" content="#102522">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📡</text></svg>">
 ${html.slice(0, styleEnd)}

@@ -1,4 +1,4 @@
-# FundRadar East Africa (live repo)
+# BidRadar EA, formerly FundRadar (live repo)
 
 Funding intelligence pipeline: open grants, tenders and opportunities for East
 Africa, pulled from primary sources, classified, and published as a digest and

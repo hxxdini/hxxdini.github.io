@@ -56,7 +56,7 @@ function itemMd(r) {
 }
 
 // ---------- Markdown ----------
-let md = `# FundRadar East Africa — Weekly Digest\n\n`;
+let md = `# BidRadar EA — Weekly Digest\n\n`;
 md += `**Issue #1 · ${today}** · ${rows.length} live opportunities tracked across ${db.prepare('SELECT COUNT(DISTINCT source) c FROM opportunities').get().c} sources\n\n`;
 md += `> Every open grant, tender and opportunity relevant to East African organizations — verified against the primary source, every week.\n\n`;
 if (editorsNote) md += `## Editor's note\n\n${editorsNote}\n\n`;
@@ -71,7 +71,7 @@ for (const s of Object.values(sections)) {
   md += `## ${s.title} (${s.items.length})\n\n`;
   md += s.items.map(itemMd).join('\n\n') + '\n\n';
 }
-md += `---\n\n*FundRadar tracks ${db.prepare('SELECT COUNT(*) c FROM opportunities').get().c} opportunities from World Bank, EU Funding & Tenders, UNGM and more. Every deadline links to its primary source — always verify before applying. Spotted an error? Reply and we fix it within 24h.*\n`;
+md += `---\n\n*BidRadar tracks ${db.prepare('SELECT COUNT(*) c FROM opportunities').get().c} opportunities from World Bank, EU Funding & Tenders, UNGM and more. Every deadline links to its primary source — always verify before applying. Spotted an error? Reply and we fix it within 24h.*\n`;
 
 fs.mkdirSync(OUT, { recursive: true });
 const mdPath = path.join(OUT, `digest-${today}.md`);

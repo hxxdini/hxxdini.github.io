@@ -14,7 +14,7 @@ if (!process.env.DRY_RUN && (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID)) {
 
 const icon = (outcome) => outcome === 'success' ? '✅' : outcome === 'skipped' ? '⏭️' : '❌';
 
-let lines = [`🛰 FundRadar pipeline run`];
+let lines = [`🛰 BidRadar pipeline run`];
 
 if (fs.existsSync(SUMMARY_PATH)) {
   const s = JSON.parse(fs.readFileSync(SUMMARY_PATH, 'utf8'));

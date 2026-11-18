@@ -1,4 +1,4 @@
-# FundRadar East Africa
+# BidRadar EA (formerly FundRadar)
 
 Funding intelligence pipeline for East African organizations: every open grant, tender and opportunity, pulled from primary sources, classified, and published as a weekly digest.
 
