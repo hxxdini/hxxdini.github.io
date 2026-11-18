@@ -92,14 +92,17 @@
   .quick { display: flex; gap: 8px; align-items: center; padding: 10px 0 4px; margin-bottom: 14px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
   .quick::-webkit-scrollbar { display: none; }
   .quick > * { flex-shrink: 0; }
-  .tabs { display: flex; gap: 3px; padding: 3px; border-radius: 12px; background: var(--chip); }
-  .tabs button { min-height: 38px; padding: 7px 13px; border: 0; border-radius: 9px; background: transparent; color: var(--muted); font-size: 13px; font-weight: 700; cursor: pointer; }
-  .tabs button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow-sm); }
+  .tabs { display: flex; gap: 2px; height: 44px; padding: 3px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); box-sizing: border-box; }
+  .tabs button { height: 100%; padding: 0 12px; border: 0; border-radius: 9px; background: transparent; color: var(--muted); font-size: 13px; font-weight: 700; cursor: pointer; }
+  .tabs button:hover { color: var(--ink); }
+  .tabs button[aria-pressed="true"] { background: var(--mint); color: var(--green-dark); box-shadow: inset 0 0 0 1px var(--green); }
   .select-wrap { position: relative; }
   .select-wrap::after { position: absolute; top: 50%; right: 12px; transform: translateY(-58%); color: var(--green); content: "⌄"; font-size: 17px; pointer-events: none; }
-  select { min-height: 44px; padding: 8px 34px 8px 12px; border: 1px solid var(--line); border-radius: 11px; background: var(--surface); color: var(--ink);
-    font-size: 16px; font-weight: 600; cursor: pointer; -webkit-appearance: none; appearance: none; }
-  .toggle { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 8px 13px; border: 1px solid var(--line); border-radius: 999px;
+  select { height: 44px; padding: 0 34px 0 13px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--ink);
+    font-size: 16px; font-weight: 700; cursor: pointer; -webkit-appearance: none; appearance: none; box-sizing: border-box; }
+  .quick select { font-size: 13px; }
+  @media (pointer: coarse) { .quick select { font-size: 16px; } }
+  .toggle { display: inline-flex; align-items: center; gap: 6px; height: 44px; padding: 0 13px; border: 1px solid var(--line); border-radius: 12px; box-sizing: border-box;
     background: var(--surface); color: var(--ink); font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; }
   .toggle:hover { border-color: #82b39f; }
   .toggle-count { display: inline-grid; place-items: center; min-width: 24px; height: 22px; padding: 0 7px; border-radius: 999px; background: var(--line); font-size: 12px; font-weight: 800; font-variant-numeric: tabular-nums; }
@@ -291,7 +294,6 @@
       </select>
     </div>
     <button class="toggle" id="newToggle" aria-pressed="false">New <span class="toggle-count" id="newCount">0</span></button>
-    <button class="toggle" id="schoolToggle" aria-pressed="false" aria-label="Filter for schools eligible in Uganda">Uganda schools <span class="toggle-count" id="schoolCount">0</span></button>
     <button class="toggle" id="shortlistToggle" aria-pressed="false">&#9734; Saved <span class="toggle-count" id="shortlistCount">0</span></button>
   </div>
 
@@ -341,8 +343,6 @@
   var sortSel = document.getElementById('sort');
   var newBtn = document.getElementById('newToggle');
   var newCountEl = document.getElementById('newCount');
-  var schoolBtn = document.getElementById('schoolToggle');
-  var schoolCountEl = document.getElementById('schoolCount');
   var shortlistBtn = document.getElementById('shortlistToggle');
   var shortlistCountEl = document.getElementById('shortlistCount');
   var countryChipsEl = document.getElementById('countryChips');
@@ -361,9 +361,8 @@
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   };
 
-  var state = { type: 'all', country: 'all', sector: 'all', query: '', sort: 'deadline_asc', shortlistOnly: false, newOnly: false, schoolOnly: false };
+  var state = { type: 'all', country: 'all', sector: 'all', query: '', sort: 'deadline_asc', shortlistOnly: false, newOnly: false };
   newCountEl.textContent = DATA.filter(function (o) { return o.n === BUILD_DATE; }).length;
-  schoolCountEl.textContent = DATA.filter(function (o) { return o.g; }).length;
   var current = [];
 
   // ---------- shortlist (localStorage) ----------
@@ -393,7 +392,7 @@
   drawerClose.addEventListener('click', closeDrawer);
   sidebarBackdrop.addEventListener('click', closeDrawer);
   function updateFilterBadge() {
-    var n = (state.country !== 'all' ? 1 : 0) + (state.sector !== 'all' ? 1 : 0) + (state.schoolOnly ? 1 : 0);
+    var n = (state.country !== 'all' ? 1 : 0) + (state.sector !== 'all' ? 1 : 0);
     if (n) { filterBadge.textContent = n; filterBadge.hidden = false; }
     else { filterBadge.hidden = true; }
   }
@@ -456,7 +455,6 @@
     if (state.country !== 'all' && state.country !== 'regional' && !o.c.some(function (c) { return c.indexOf(state.country) === 0; })) return false;
     if (state.sector !== 'all' && o.k.indexOf(state.sector) === -1) return false;
     if (state.newOnly && o.n !== BUILD_DATE) return false;
-    if (state.schoolOnly && !o.g) return false;
     if (state.shortlistOnly && !shortlist.has(o.id)) return false;
     if (state.query) {
       var hay = (o.t + ' ' + o.f + ' ' + o.s + ' ' + o.k.join(' ') + ' ' + o.c.join(' ') + ' ' + o.p).toLowerCase();
@@ -505,9 +503,7 @@
 
   function renderList() {
     if (!current.length) {
-      pool.innerHTML = state.schoolOnly && !DATA.some(function (o) { return o.g; })
-        ? '<p class="empty">No current opportunities are confidently tagged as open to Uganda schools. Check the full call text and revisit after the next pipeline run.</p>'
-        : '<p class="empty">Nothing matches — widen the filters.</p>';
+      pool.innerHTML = '<p class="empty">Nothing matches — widen the filters.</p>';
       return;
     }
     var html = '';
@@ -549,11 +545,6 @@
   newBtn.addEventListener('click', function () {
     state.newOnly = !state.newOnly;
     newBtn.setAttribute('aria-pressed', state.newOnly);
-    refilter();
-  });
-  schoolBtn.addEventListener('click', function () {
-    state.schoolOnly = !state.schoolOnly;
-    schoolBtn.setAttribute('aria-pressed', state.schoolOnly);
     refilter();
   });
   shortlistBtn.addEventListener('click', function () {
