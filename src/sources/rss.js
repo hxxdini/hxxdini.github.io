@@ -7,7 +7,7 @@ const parser = new XMLParser({ ignoreAttributes: false });
 
 async function fetchFeed(url) {
   const res = await fetchRetry(url, {
-    headers: { 'User-Agent': 'Mozilla/5.0 (compatible; FundRadar/0.1)' },
+    headers: { 'User-Agent': 'Mozilla/5.0 (compatible; BidRadar/0.1)' },
 
   });
   if (!res.ok) throw new Error(`${url} HTTP ${res.status}`);

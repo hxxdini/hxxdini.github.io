@@ -4,7 +4,7 @@ import { fetchRetry } from '../http.js';
 // Prosper Global is the rebranded Mercy Corps (mercycorps.org 301s here as of
 // November 2026). Its /tenders page lists every active "Intent to Bid" with
 // the destination country and an open/close date range as ISO <time> tags,
-// so the list page alone has every field FundRadar needs — no detail fetch.
+// so the list page alone has every field BidRadar needs — no detail fetch.
 // Only rows whose country canonicalizes into East Africa are kept; archived
 // or expired rows (deadline before today) fall out.
 export const LIST_URL = 'https://www.prosperglobal.org/tenders';
@@ -50,7 +50,7 @@ export function parseProsperGlobalTenders(html, today = new Date().toISOString()
 }
 
 export async function fetchProsperGlobal() {
-  const res = await fetchRetry(LIST_URL, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; FundRadar/0.1)' } }, { timeoutMs: 60000 });
+  const res = await fetchRetry(LIST_URL, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; BidRadar/0.1)' } }, { timeoutMs: 60000 });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return parseProsperGlobalTenders(await res.text());
 }

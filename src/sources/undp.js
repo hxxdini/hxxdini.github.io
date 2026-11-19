@@ -7,7 +7,7 @@ const FEED = 'https://procurement-notices.undp.org/export_feed.cfm?type=rss';
 
 export async function fetchUndp() {
   const res = await fetchRetry(FEED, {
-    headers: { 'User-Agent': 'Mozilla/5.0 (compatible; FundRadar/0.1)' },
+    headers: { 'User-Agent': 'Mozilla/5.0 (compatible; BidRadar/0.1)' },
 
   });
   if (!res.ok) throw new Error(`undp HTTP ${res.status}`);

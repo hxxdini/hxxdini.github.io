@@ -51,7 +51,7 @@ async function curlFetch(url, options, timeoutMs) {
   const args = ['-sS', '--max-time', String(Math.ceil(timeoutMs / 1000)), '-D', headerFile, '-o', bodyFile, '-w', '%{http_code}'];
 
   if (options.extraCa) args.push('--cacert', await caBundle(options.extraCa));
-  args.push('-A', options.headers?.['User-Agent'] ?? 'Mozilla/5.0 (compatible; FundRadar/0.1)');
+  args.push('-A', options.headers?.['User-Agent'] ?? 'Mozilla/5.0 (compatible; BidRadar/0.1)');
   if (options.method && options.method !== 'GET') args.push('-X', options.method);
   for (const [k, v] of Object.entries(options.headers ?? {})) {
     if (k.toLowerCase() !== 'user-agent') args.push('-H', `${k}: ${v}`);

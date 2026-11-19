@@ -14,7 +14,7 @@ import { fetchRetry } from '../http.js';
 // within 14 days keeps them on the live site, like other NGO sources).
 export const LIST_URL = 'https://amref.org/tenders/';
 const SOURCE = 'Amref Health Africa';
-const UA = 'Mozilla/5.0 (compatible; FundRadar/0.1)';
+const UA = 'Mozilla/5.0 (compatible; BidRadar/0.1)';
 const CONCURRENCY = 3;
 const ITEM_MAX_AGE_DAYS = 90;
 // Items without a parseable deadline are assumed open while fresh. After

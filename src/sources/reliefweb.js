@@ -84,7 +84,7 @@ export function mapReliefWebJob(item, today) {
 
 export async function fetchReliefWeb() {
   const today = new Date().toISOString().slice(0, 10);
-  const res = await fetchRetry(FEED_URL, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; FundRadar/0.1)' } });
+  const res = await fetchRetry(FEED_URL, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; BidRadar/0.1)' } });
   if (!res.ok) throw new Error(`reliefweb rss HTTP ${res.status}`);
   const xml = await res.text();
   // A bot-check page comes back as 200 HTML; don't let it pass as "no consultancies".

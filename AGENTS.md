@@ -25,7 +25,7 @@ Plain Node (ESM), one dependency (`fast-xml-parser`), SQLite at
 - `npm run digest` writes `out/digest-YYYY-MM-DD.md`
 - `node src/site.js` regenerates the site at `docs/index.html` (GitHub Pages)
 - `npm run stats` prints a breakdown by source, type and country
-- `gh workflow run fundradar-pipeline` triggers the bot by hand
+- `gh workflow run bidradar-pipeline` triggers the bot by hand
 
 ## Layout
 

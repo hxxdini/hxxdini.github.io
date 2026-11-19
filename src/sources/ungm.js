@@ -15,7 +15,7 @@ export async function fetchUngm({ pages = 20 } = {}) {
   for (let page = 0; page < pages; page++) {
     const res = await fetchRetry(API, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0 (compatible; FundRadar/0.1)', RequestVerificationToken: token, Cookie: cookies },
+      headers: { 'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0 (compatible; BidRadar/0.1)', RequestVerificationToken: token, Cookie: cookies },
       body: JSON.stringify({
         PageIndex: page, PageSize: 15,
         Title: '', Description: '', Reference: '',

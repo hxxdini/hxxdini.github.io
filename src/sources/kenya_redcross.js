@@ -68,7 +68,7 @@ export function parseKenyaRedCross(html, today = new Date().toISOString().slice(
 export async function fetchKenyaRedCross() {
   // Only page 1 is worth fetching: pages 2+ are historical archives. If they
   // ever start carrying open items again, uncomment the paginated loop below.
-  const res = await fetchRetry(LIST_URL, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; FundRadar/0.1)' } }, { timeoutMs: 60000 });
+  const res = await fetchRetry(LIST_URL, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; BidRadar/0.1)' } }, { timeoutMs: 60000 });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return parseKenyaRedCross(await res.text());
 }

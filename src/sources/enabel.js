@@ -13,7 +13,7 @@ import { fetchRetry } from '../http.js';
 // one HTTPS fetch per item and starts to rate-limit from the GitHub runner.
 export const API_URL = 'https://www.enabel.be/wp-json/wp/v2/tenders?per_page=50&orderby=date&order=desc';
 const SOURCE = 'Enabel (Belgian development agency)';
-const UA = 'Mozilla/5.0 (compatible; FundRadar/0.1)';
+const UA = 'Mozilla/5.0 (compatible; BidRadar/0.1)';
 const CONCURRENCY = 3;
 
 // Enabel labels tenders with its own country names; map the East African ones

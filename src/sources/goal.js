@@ -11,7 +11,7 @@ import { fetchRetry } from '../http.js';
 // are kept, the rest dropped.
 export const LIST_URL = 'https://www.goalglobal.org/tenders/';
 const SOURCE = 'GOAL Global';
-const UA = 'Mozilla/5.0 (compatible; FundRadar/0.1)';
+const UA = 'Mozilla/5.0 (compatible; BidRadar/0.1)';
 
 const MONTHS = {
   january: '01', february: '02', march: '03', april: '04', may: '05', june: '06',

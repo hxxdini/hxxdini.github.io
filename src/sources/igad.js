@@ -7,14 +7,14 @@ import { fetchRetry } from '../http.js';
 // covers three kinds of posts: tenders, consultancies and staff vacancies.
 // We keep tenders and consultancies, drop vacancies (not opportunities), and
 // require at least one canonical East African country on the item's location
-// field — Djibouti/Eritrea/Sudan aren't in FundRadar's EA scope.
+// field — Djibouti/Eritrea/Sudan aren't in BidRadar's EA scope.
 //
 // The deadline sits only on the item HTML (the plugin keeps it out of REST
 // meta), so this fetcher follows Enabel's pattern: list from the API, then
 // a short per-item fetch for the `<li class="application-deadline">` block.
 export const API_URL = 'https://igad.int/wp-json/wp/v2/job-listings?per_page=50&orderby=date&order=desc';
 const SOURCE = 'IGAD (Intergovernmental Authority on Development)';
-const UA = 'Mozilla/5.0 (compatible; FundRadar/0.1)';
+const UA = 'Mozilla/5.0 (compatible; BidRadar/0.1)';
 const CONCURRENCY = 3;
 
 const MONTHS = {

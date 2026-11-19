@@ -61,7 +61,7 @@ export function parseDrcTenders(html, today = new Date().toISOString().slice(0, 
 }
 
 export async function fetchDrc() {
-  const res = await fetchRetry(LIST_URL, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; FundRadar/0.1)' } }, { timeoutMs: 60000 });
+  const res = await fetchRetry(LIST_URL, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; BidRadar/0.1)' } }, { timeoutMs: 60000 });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return parseDrcTenders(await res.text());
 }
