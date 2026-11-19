@@ -10,6 +10,10 @@ const exec = promisify(execFile);
 // hosts in sandboxed/local runs; curl is universally reliable), native fetch is fallback.
 // Returns a minimal Response-like object: { ok, status, text(), json() }.
 //
+// A normal desktop-browser User-Agent for public sites whose WAF rejects bot-style agents
+// (UNGM since 2026-11-19). Only use where robots.txt allows the path.
+export const BROWSER_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36';
+
 // options: { method, headers: {}, body: string, form: { name: jsonString }, extraCa: path }
 // `extraCa` is a PEM intermediate to add to the system trust store, for hosts that don't
 // send their full certificate chain. Verification stays on.

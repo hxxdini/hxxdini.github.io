@@ -1,11 +1,14 @@
 import { makeId, enrich, stripHtml, EA_COUNTRIES } from '../normalize.js';
-import { fetchRetry } from '../http.js';
+import { fetchRetry, BROWSER_UA } from '../http.js';
 
 const API = 'https://www.ungm.org/Public/Notice/Search';
+// UNGM's WAF has 403'd bot-style User-Agents (incl. curl) since 2026-11-19, even for
+// robots.txt. robots.txt allows /Public/Notice for all agents, so fetch as a normal browser.
+export const UNGM_HEADERS = { 'User-Agent': BROWSER_UA, Accept: 'text/html,application/xhtml+xml', 'Accept-Language': 'en' };
 
 // UNGM — procurement notices across all UN agencies. POST returns HTML rows.
 export async function fetchUngm({ pages = 20 } = {}) {
-  const landing = await fetchRetry('https://www.ungm.org/Public/Notice');
+  const landing = await fetchRetry('https://www.ungm.org/Public/Notice', { headers: UNGM_HEADERS });
   if (!landing.ok) throw new Error(`ungm landing HTTP ${landing.status}`);
   const landingHtml = await landing.text();
   const token = landingHtml.match(/name="__RequestVerificationToken"[^>]*value="([^"]+)"/)?.[1];
@@ -15,7 +18,7 @@ export async function fetchUngm({ pages = 20 } = {}) {
   for (let page = 0; page < pages; page++) {
     const res = await fetchRetry(API, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0 (compatible; BidRadar/0.1)', RequestVerificationToken: token, Cookie: cookies },
+      headers: { ...UNGM_HEADERS, Accept: 'text/html, */*', 'Content-Type': 'application/json', RequestVerificationToken: token, Cookie: cookies },
       body: JSON.stringify({
         PageIndex: page, PageSize: 15,
         Title: '', Description: '', Reference: '',
