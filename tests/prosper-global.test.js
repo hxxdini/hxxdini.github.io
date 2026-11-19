@@ -60,4 +60,9 @@ assert.ok(!rows.some((r) => r.url.includes('jordan')), 'non-EA tender leaked thr
 // Layout-change guard: empty page must raise, not silently return [].
 assert.throws(() => parseProsperGlobalTenders('<html></html>'), /no tender rows/);
 
+// Empty tenders view (live page on 2026-11-19): no open tenders is a valid empty result, not a layout change.
+assert.deepEqual(parseProsperGlobalTenders('<main><div class="l-constrain"><div  class="c-view c-view--tenders c-view--display-default view js-view-dom-id-abc123">\n  \n  \n</div></div></main>'), []);
+// A different view that happens to be empty still throws.
+assert.throws(() => parseProsperGlobalTenders('<main><div class="c-view c-view--news"> </div></main>'), /no tender rows/);
+
 console.log('prosper-global tests passed');

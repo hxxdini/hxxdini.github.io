@@ -15,7 +15,13 @@ const SOURCE = 'Prosper Global (formerly Mercy Corps)';
 // treat the second datetime attribute as the close date.
 export function parseProsperGlobalTenders(html, today = new Date().toISOString().slice(0, 10)) {
   const rows = html.match(/<div\s+class="c-view__row">[\s\S]*?(?=<div\s+class="c-view__row">|<div\s+class="c-view__footer"|<\/main)/g);
-  if (!rows || !rows.length) throw new Error('Prosper Global: no tender rows found (page layout changed?)');
+  if (!rows || !rows.length) {
+    // An empty tenders view (container present, no rows) is a real "no open tenders
+    // today" — seen 2026-11-19. Only a missing container means the layout changed.
+    const view = html.match(/<div\s+class="c-view c-view--tenders[^"]*">([\s\S]*?)<\/div>/);
+    if (view && !stripHtml(view[1]).trim()) return [];
+    throw new Error('Prosper Global: no tender rows found (page layout changed?)');
+  }
   const out = [];
   for (const row of rows) {
     const titleRaw = row.match(/<h3 class="c-button-box__title">([\s\S]*?)<\/h3>/)?.[1];
