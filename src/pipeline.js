@@ -24,6 +24,7 @@ import { fetchKenyaRedCross } from './sources/kenya_redcross.js';
 import { fetchProsperGlobal } from './sources/prosper_global.js';
 import { fetchGoal } from './sources/goal.js';
 import { fetchAmref } from './sources/amref.js';
+import { fetchIgad } from './sources/igad.js';
 import { verifyFundsForNgos, verifyWebRadarFundsForNgos, isCallPost } from './sources/fundsforngos_verify.js';
 import { computeStaleSources, STALE_HOURS } from './stale.js';
 
@@ -55,6 +56,7 @@ const SOURCES = [
   ['Prosper Global (formerly Mercy Corps)', fetchProsperGlobal],
   ['GOAL Global', fetchGoal],
   ['Amref Health Africa', fetchAmref],
+  ['IGAD (Intergovernmental Authority on Development)', fetchIgad],
 ];
 
 const db = openDb();
