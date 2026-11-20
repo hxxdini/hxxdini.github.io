@@ -1,0 +1,90 @@
+{
+ "data": {
+  "items": {
+   "totalPages": 3,
+   "totalRecords": 254,
+   "currentPage": 1,
+   "hasNext": true,
+   "rows": [
+    {
+     "descriptionOfTheProcurement": "Procurement of motor vehicle service accessories (Tyres, batteries & accessories)",
+     "entityNumber": "FA/2026/2027/286/TR61/G/02",
+     "entityStatus": "PUBLISHED",
+     "entitySubCategoryName": "Closed Framework Contracts for Supplies of Goods",
+     "entityType": "FRAMEWORK",
+     "entityUuid": "983dec4d-5904-4ffa-8fc7-9d8f9dea8f04",
+     "invitationDate": "2026-11-20T14:00",
+     "procurementCategoryName": "Goods",
+     "procuringEntityName": "TANZANIA BROADCASTING CORPORATION",
+     "submissionOrOpeningDate": "2026-11-27T14:00",
+     "referenceNumber": "FA/2026/2027/286/TR61/G/02"
+    },
+    {
+     "descriptionOfTheProcurement": "Periodic Maintenance,Routine Maintenance,Bridge Major Repair(1no) along Msovinzi - Mikese (24.05km Unpaved) R668, Routine Maintenance and Bridge Preventive Maintenance Works along Kiswira - Tawa (10.3km Unpaved) R669",
+     "entityNumber": "TR36/014/2026/2027/W/67",
+     "entityStatus": "PUBLISHED",
+     "entitySubCategoryName": "Small Works",
+     "entityType": "TENDER",
+     "entityUuid": "d151b126-c8a6-4361-8045-9b0c3e64d950",
+     "invitationDate": "2026-11-20T00:00",
+     "procurementCategoryName": "Works",
+     "procuringEntityName": "TANROADS - MOROGORO REGIONAL OFFICE",
+     "submissionOrOpeningDate": "2026-11-27T15:00",
+     "referenceNumber": "TR36/014/2026/2027/W/67-S001"
+    },
+    {
+     "descriptionOfTheProcurement": "PROVISION OF CONSTRUCTION OF HEAD OF DEPARTMENT HOUSE 02",
+     "entityNumber": "8626/2026/2027/NC/55",
+     "entityStatus": "PUBLISHED",
+     "entitySubCategoryName": "Nyaraka Sanifu ya Huduma za Ufundi Ujenzi",
+     "entityType": "PLANNED_TENDER",
+     "entityUuid": "ec22a678-925b-42a0-999c-518f0daf4f8b",
+     "invitationDate": "2026-11-20T00:00",
+     "procurementCategoryName": "Non Consultancy",
+     "procuringEntityName": "TANGA CITY COUNCIL",
+     "submissionOrOpeningDate": "2026-11-27T10:00",
+     "referenceNumber": "8626/2026/2027/NC/55"
+    },
+    {
+     "descriptionOfTheProcurement": "Expired example",
+     "entityNumber": "FA/2026/2027/286/TR61/G/02",
+     "entityStatus": "PUBLISHED",
+     "entitySubCategoryName": "Closed Framework Contracts for Supplies of Goods",
+     "entityType": "FRAMEWORK",
+     "entityUuid": "old-1",
+     "invitationDate": "2026-11-20T14:00",
+     "procurementCategoryName": "Goods",
+     "procuringEntityName": "TANZANIA BROADCASTING CORPORATION",
+     "submissionOrOpeningDate": "2026-11-01T10:00",
+     "referenceNumber": "FA/2026/2027/286/TR61/G/02"
+    },
+    {
+     "descriptionOfTheProcurement": "No deadline example",
+     "entityNumber": "FA/2026/2027/286/TR61/G/02",
+     "entityStatus": "PUBLISHED",
+     "entitySubCategoryName": "Closed Framework Contracts for Supplies of Goods",
+     "entityType": "FRAMEWORK",
+     "entityUuid": "nodl-1",
+     "invitationDate": "2026-11-20T14:00",
+     "procurementCategoryName": "Goods",
+     "procuringEntityName": "TANZANIA BROADCASTING CORPORATION",
+     "submissionOrOpeningDate": null,
+     "referenceNumber": "FA/2026/2027/286/TR61/G/02"
+    },
+    {
+     "descriptionOfTheProcurement": "Procurement of motor vehicle service accessories (Tyres, batteries & accessories)",
+     "entityNumber": "FA/2026/2027/286/TR61/G/02",
+     "entityStatus": "DRAFT",
+     "entitySubCategoryName": "Closed Framework Contracts for Supplies of Goods",
+     "entityType": "FRAMEWORK",
+     "entityUuid": "draft-1",
+     "invitationDate": "2026-11-20T14:00",
+     "procurementCategoryName": "Goods",
+     "procuringEntityName": "TANZANIA BROADCASTING CORPORATION",
+     "submissionOrOpeningDate": "2026-11-27T14:00",
+     "referenceNumber": "FA/2026/2027/286/TR61/G/02"
+    }
+   ]
+  }
+ }
+}
