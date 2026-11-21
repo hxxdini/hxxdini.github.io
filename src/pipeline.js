@@ -25,6 +25,7 @@ import { fetchProsperGlobal } from './sources/prosper_global.js';
 import { fetchGoal } from './sources/goal.js';
 import { fetchAmref } from './sources/amref.js';
 import { fetchIgad } from './sources/igad.js';
+import { fetchAfricanUnion } from './sources/african_union.js';
 import { fetchTanzaniaNest } from './sources/tanzania_nest.js';
 import { verifyFundsForNgos, verifyWebRadarFundsForNgos, isCallPost } from './sources/fundsforngos_verify.js';
 import { computeStaleSources, STALE_HOURS } from './stale.js';
@@ -58,6 +59,7 @@ const SOURCES = [
   ['GOAL Global', fetchGoal],
   ['Amref Health Africa', fetchAmref],
   ['IGAD (Intergovernmental Authority on Development)', fetchIgad],
+  ['African Union Commission', fetchAfricanUnion],
   ['Tanzania NeST (PPRA)', fetchTanzaniaNest],
 ];
 
