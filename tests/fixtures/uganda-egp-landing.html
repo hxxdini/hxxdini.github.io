@@ -1,0 +1,21 @@
+        <tbody>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    $(document).ready(function () {
+        if ($.fn.DataTable && !$.fn.DataTable.isDataTable('#current_bid_notices')) {
+            $('#current_bid_notices').DataTable({
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: "/public-bids/api-archived-notices/ajax",
+                    type: "POST",
+                    data: {scope: 'current', _token: "TESTTOKEN123"}
+                },
+                "columns": [
+                    {data: "procuring_entity"},
+                    {data: "type"},
+                    {data: "procurement_subject"},
+                    {data: "published_date"},

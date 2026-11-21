@@ -47,13 +47,17 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           repo="${{ github.repository }}"
+          sha=$(git rev-parse HEAD)
+          since=$(date -u -d '-60 seconds' +%FT%TZ)
           # One explicit rebuild request; the push itself also triggers one.
+          # The two often land in the same second and one errors as a duplicate,
+          # so judge by all builds for our commit (src/pages-status.js), not builds/latest.
           # Failure here is non-fatal (e.g. an already-in-flight build) — we just need the latest to land.
           gh api -X POST "repos/$repo/pages/builds" >/dev/null || echo "note: rebuild POST returned non-zero, continuing"
           # Poll for up to ~15 minutes. Real builds for this site have taken ~9 min.
           deadline=$(( $(date +%s) + 900 ))
           while [ $(date +%s) -lt $deadline ]; do
-            status=$(gh api "repos/$repo/pages/builds/latest" -q .status 2>/dev/null || echo unknown)
+            status=$(gh api "repos/$repo/pages/builds?per_page=20" 2>/dev/null | node src/pages-status.js "$sha" "$since" || echo unknown)
             echo "pages status: $status (deadline in $(( deadline - $(date +%s) ))s)"
             case "$status" in
               built) exit 0 ;;

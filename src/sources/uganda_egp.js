@@ -1,11 +1,9 @@
 import { makeId, enrich, stripHtml } from '../normalize.js';
-import { fetchRetry } from '../http.js';
+import { fetchRetry, BROWSER_UA } from '../http.js';
 
-// Uganda e-Government Procurement portal (PPDA). Server-rendered tables.
-// Row structure: Reference | Type | Subject (truncated) | Published | Deadline | Actions
+// Uganda e-Government Procurement portal (PPDA).
 // Notice URLs are absolute: https://egpuganda.go.ug/index/{id}_egp
 const BASE = 'https://egpuganda.go.ug';
-const PAGES = ['/bid-notices', '/bid-notices/consultancy', '/bid-notices/none-consultancy', '/bid-notices/supplies', '/bid-notices/works'];
 
 export function isTruncatedSubject(subject) {
   return /(?:\.{3}|…)\s*$/u.test(String(subject ?? '').trim());
@@ -54,67 +52,98 @@ async function fetchFullSubject(noticeUrl) {
   }
 }
 
+// Since 2026-11-21 the /bid-notices tables are empty DataTables shells filled by
+// a Laravel AJAX POST (needs the page's CSRF token + session cookie). One
+// `scope=current` call covers all four procurement types.
+const AJAX = '/public-bids/api-archived-notices/ajax';
+const PAGE_SIZE = 100;
+const MAX_PAGES = 20;
+
+export function parseCsrf(html) {
+  // The current-bids table script: data: {scope: 'current', _token: "..."}
+  return String(html ?? '').match(/scope:\s*'current',\s*_token:\s*"([^"]+)"/)?.[1]
+    ?? String(html ?? '').match(/name="csrf-token"\s+content="([^"]+)"/)?.[1]
+    ?? null;
+}
+
+export function parseEgpRows(json, today = new Date().toISOString().slice(0, 10)) {
+  if (!json || !Array.isArray(json.data)) throw new Error('uganda-egp ajax: no data array');
+  const out = [];
+  const seen = new Set();
+  for (const r of json.data) {
+    const linkHtml = `${r.procuring_entity ?? ''} ${r.action_links ?? ''}`;
+    const noticeUrl = linkHtml.match(/href="((?:https:\/\/egpuganda\.go\.ug)?\/index\/(\d+)_egp)"/)?.[1];
+    const noticeId = noticeUrl?.match(/\/index\/(\d+)_egp/)?.[1];
+    if (!noticeId || seen.has(noticeId)) continue;
+    const deadline = /^\d{4}-\d{2}-\d{2}/.test(r.submission_deadline ?? '') ? r.submission_deadline.slice(0, 10) : null;
+    if (deadline && deadline < today) continue;
+    const subject = stripHtml(String(r.subject_procurement ?? '')).replace(/\s+/g, ' ').trim();
+    if (subject.length < 8) continue;
+    // Full subjects come in subject_procurement; a truncated one is expanded from the notice page later.
+    const title = completeSubject(subject);
+    seen.add(noticeId);
+    const entity = stripHtml(String(r.procurement_name ?? '')).trim();
+    const ref = String(r.procurement_ref ?? '').trim();
+    const type = r.proc_types?.title ?? stripHtml(String(r.type ?? '')).trim();
+    const published = /^\d{4}-\d{2}-\d{2}/.test(r.created_at ?? '') ? r.created_at.slice(0, 10) : null;
+    out.push({ noticeId, subject, url: noticeUrl.startsWith('http') ? noticeUrl : `${BASE}${noticeUrl}`, title, entity, ref, type, deadline, published });
+  }
+  return out;
+}
+
 export async function fetchUgandaEgp() {
+  const landing = await fetchRetry(`${BASE}/bid-notices`, { headers: { 'User-Agent': BROWSER_UA } }, { timeoutMs: 60000 });
+  if (!landing.ok) throw new Error(`uganda-egp landing HTTP ${landing.status}`);
+  const token = parseCsrf(await landing.text());
+  const cookie = landing.cookies.map((c) => c.split(';', 1)[0]).join('; ');
+  if (!token || !cookie) throw new Error('uganda-egp: no CSRF token/session on /bid-notices (layout changed?)');
+
+  const rows = [];
+  let total = Infinity;
+  for (let page = 0; page < MAX_PAGES && page * PAGE_SIZE < total; page++) {
+    const body = new URLSearchParams({ _token: token, scope: 'current', draw: String(page + 1), start: String(page * PAGE_SIZE), length: String(PAGE_SIZE) }).toString();
+    const res = await fetchRetry(`${BASE}${AJAX}`, {
+      method: 'POST',
+      body,
+      headers: {
+        'User-Agent': BROWSER_UA,
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'X-Requested-With': 'XMLHttpRequest',
+        Accept: 'application/json',
+        Referer: `${BASE}/bid-notices`,
+        Cookie: cookie,
+      },
+    }, { timeoutMs: 60000 });
+    if (!res.ok) throw new Error(`uganda-egp ajax HTTP ${res.status}`);
+    let json;
+    try { json = await res.json(); } catch { throw new Error('uganda-egp ajax: response is not JSON (session/CSRF rejected?)'); }
+    total = Number(json.recordsFiltered ?? json.recordsTotal ?? 0);
+    rows.push(...parseEgpRows(json));
+    if (!json.data?.length) break;
+  }
+  // A non-zero total that parses to nothing means the row shape changed — say so instead of a quiet 0.
+  if (total > 0 && rows.length === 0) throw new Error(`uganda-egp: ${total} notices listed but 0 parsed (row shape changed?)`);
+
   const seen = new Set();
   const out = [];
-  const today = new Date().toISOString().slice(0, 10);
-  const failures = [];
-
-  for (const page of PAGES) {
-    let html;
-    try {
-      const res = await fetchRetry(`${BASE}${page}`, {}, { timeoutMs: 60000 });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      html = await res.text();
-    } catch (e) {
-      console.error(`  ! uganda-egp ${page}: ${e.message}`);
-      failures.push(`${page}: ${e.message}`);
-      continue;
-    }
-
-    // Rows use absolute URLs: https://egpuganda.go.ug/index/{id}_egp
-    for (const tr of html.split(/<tr[\s>]/).slice(1)) {
-      // Match both relative /index/ and absolute https://egpuganda.go.ug/index/ links
-      const noticeUrl = tr.match(/href="((?:https:\/\/egpuganda\.go\.ug)?\/index\/(\d+)_egp)"/)?.[1];
-      const noticeId = tr.match(/\/index\/(\d+)_egp/)?.[1];
-      if (!noticeUrl || !noticeId || seen.has(noticeId)) continue;
-
-      const cells = [...tr.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/g)].map((m) => stripHtml(m[1]).replace(/\s+/g, ' ').trim());
-      if (cells.length < 4) continue;
-
-      // cells[0]=ref, cells[1]=type, cells[2]=subject, cells[3]=published, cells[4]=deadline
-      const subject = cells[2] ?? '';
-      const published = cells[3] ?? '';
-      const deadline = cells[4]?.slice(0, 10) ?? null;
-      const entity = cells[0] ?? '';
-      const type = cells[1] ?? '';
-
-      if (!subject || subject.length < 8) continue;
-      if (deadline && deadline < today) continue;
-
-      seen.add(noticeId);
-
-      const fullUrl = noticeUrl.startsWith('http') ? noticeUrl : `${BASE}${noticeUrl}`;
-      const fullSubject = isTruncatedSubject(subject) ? await fetchFullSubject(fullUrl) : null;
-      const title = completeSubject(subject, fullSubject);
-      if (!title) continue;
-
-      out.push(enrich({
-        id: makeId('uganda-egp', noticeId),
-        source: 'Uganda eGP (PPDA)',
-        funder: 'Government of Uganda',
-        title,
-        url: fullUrl,
-        summary: `${entity} — ${type} tender`,
-        type: 'tender',
-        deadline,
-        published: published.slice(0, 10) || null,
-        countries: ['Uganda'],
-        raw: { noticeId, ref: entity, type, cells: cells.slice(0, 5) },
-      }));
-    }
+  for (const r of rows) {
+    if (seen.has(r.noticeId)) continue;
+    seen.add(r.noticeId);
+    const title = r.title ?? completeSubject(r.subject, await fetchFullSubject(r.url));
+    if (!title) continue;
+    out.push(enrich({
+      id: makeId('uganda-egp', r.noticeId),
+      source: 'Uganda eGP (PPDA)',
+      funder: 'Government of Uganda',
+      title,
+      url: r.url,
+      summary: `${r.entity || r.ref} — ${r.type} tender`,
+      type: 'tender',
+      deadline: r.deadline,
+      published: r.published,
+      countries: ['Uganda'],
+      raw: { noticeId: r.noticeId, ref: r.ref, entity: r.entity, type: r.type },
+    }));
   }
-  // Never fail silently: every tab failing used to return [] and look like a quiet day.
-  if (failures.length === PAGES.length) throw new Error(`all ${PAGES.length} tabs failed — ${failures[0]}`);
   return out;
 }
