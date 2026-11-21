@@ -1,10 +1,10 @@
 name: channel-post
 
-# Daily digest to the public Telegram channel (@BidRadar) at 07:30 EAT,
-# built from the database the pipeline bot committed. See src/channel-post.js.
+# Daily digest to the public Telegram channel (@BidRadar), built from the
+# database the pipeline bot committed. See src/channel-post.js.
+# Triggered at 07:30 EAT by the Mac (~/code/_scratch/catch-up/catch_up.py), which
+# retries if it was offline. GitHub's own schedule ran 5-9 hours late, so it's off.
 on:
-  schedule:
-    - cron: '30 4 * * *'
   workflow_dispatch: {}
 
 jobs:
