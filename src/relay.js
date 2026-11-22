@@ -1,4 +1,4 @@
-// Relay for sources that block GitHub's runner IPs (ReliefWeb).
+// Relay for sources that block GitHub's runner IPs (ReliefWeb, fundsforNGOs).
 //
 //   node src/relay.js            fetch every relay source on this machine and
 //                                write data/relay/<key>.json
@@ -11,6 +11,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { fetchReliefWeb } from './sources/reliefweb.js';
+import { fetchFundsForNgos } from './sources/rss.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const RELAY_DIR = path.join(ROOT, 'data', 'relay');
@@ -20,6 +21,7 @@ export const RELAY_MAX_AGE_HOURS = 12;
 // too, because GitHub's runners have no browser.
 export const RELAY_SOURCES = {
   reliefweb: fetchReliefWeb,
+  fundsforngos: fetchFundsForNgos,
 };
 
 export function readRelay(key, now = Date.now()) {

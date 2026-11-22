@@ -50,7 +50,12 @@ function rssToRecord(item, { source, funder, defaultType }) {
 
 // fundsforNGOs — aggregator; the feed is a teaser, so funder/deadline/official link
 // are filled in afterwards from the full article (see fundsforngos_verify.js)
-export async function fetchFundsForNgos() {
+//
+// Cloudflare sometimes 403s GitHub runner IPs (run 45068166044, 2026-11-22).
+// Per-feed errors used to be swallowed, so a fully blocked run showed as a
+// clean "0 fetched". Now: every feed failing throws (the pipeline falls back to
+// the Mac relay), one feed failing marks the result partial.
+export async function fetchFundsForNgos({ feedFetcher = fetchFeed } = {}) {
   // www2 subdomain is stale (returns 1 item); www returns 25+
   // Africa feed items are explicitly Africa-scoped → force ea_relevant on those
   const feeds = [
@@ -59,9 +64,10 @@ export async function fetchFundsForNgos() {
   ];
   const out = [];
   const seen = new Set();
+  const errors = [];
   for (const { url: f, forceEa } of feeds) {
     try {
-      const items = await fetchFeed(f);
+      const items = await feedFetcher(f);
       for (const item of items) {
         const rec = rssToRecord(item, { source: 'fundsforNGOs', funder: null, defaultType: 'grant' });
         // Sample proposals, writing guides and newsletters share the feed; they aren't calls.
@@ -70,9 +76,12 @@ export async function fetchFundsForNgos() {
         out.push(forceEa ? { ...rec, ea_relevant: 1 } : rec);
       }
     } catch (e) {
+      errors.push(e.message);
       console.error(`  ! feed failed ${f}: ${e.message}`);
     }
   }
+  if (errors.length === feeds.length) throw new Error(`all fundsforNGOs feeds failed: ${errors[0]}`);
+  if (errors.length) out.partial = `${errors.length}/${feeds.length} feeds failed (${errors[0].slice(0, 80)})`;
   return out;
 }
 

@@ -38,7 +38,8 @@ const SUMMARY_PATH = process.env.SUMMARY_PATH || path.join(ROOT, '.run-summary.j
 const SOURCES = [
   ['World Bank Procurement', fetchWorldBank],
   ['EU Funding & Tenders', fetchEuSedia],
-  ['fundsforNGOs', fetchFundsForNgos],
+  // Cloudflare intermittently 403s runner IPs; falls back to data/relay/fundsforngos.json from the Mac
+  ['fundsforNGOs', withRelay('fundsforngos', fetchFundsForNgos)],
   ['Opportunity Desk', fetchOpportunityDesk],
   ['UNGM (UN agencies)', fetchUngm],
   ['Uganda eGP (PPDA)', fetchUgandaEgp],
