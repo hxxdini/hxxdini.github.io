@@ -29,7 +29,7 @@ import { fetchAfricanUnion } from './sources/african_union.js';
 import { fetchTanzaniaNest } from './sources/tanzania_nest.js';
 import { fetchSomaliJobs } from './sources/somalijobs.js';
 import { verifyFundsForNgos, verifyWebRadarFundsForNgos, isCallPost } from './sources/fundsforngos_verify.js';
-import { computeStaleSources, STALE_HOURS } from './stale.js';
+import { computeStaleSources, computeSilentZeros, STALE_HOURS, SILENT_ZERO_RUNS } from './stale.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SUMMARY_PATH = process.env.SUMMARY_PATH || path.join(ROOT, '.run-summary.json');
@@ -159,9 +159,19 @@ const latestBySource = db.prepare(`
 `).all();
 const staleSources = computeStaleSources(latestBySource, perSource);
 
+// Silent-zero watchdog: compare this run's counts with the last runs, then record this run.
+const ranAt = new Date().toISOString();
+const priorRuns = db.prepare('SELECT fetched FROM source_runs WHERE source = ? ORDER BY ran_at DESC LIMIT ?');
+const history = Object.fromEntries(perSource.map((p) => [p.name, priorRuns.all(p.name, SILENT_ZERO_RUNS).map((r) => r.fetched)]));
+const silentZeros = computeSilentZeros(history, perSource);
+const recordRun = db.prepare('INSERT INTO source_runs (source, ran_at, fetched, error) VALUES (?, ?, ?, ?)');
+for (const p of perSource) recordRun.run(p.name, ranAt, p.fetched, p.error);
+db.prepare('DELETE FROM source_runs WHERE ran_at < ?').run(new Date(Date.now() - 30 * 86400000).toISOString());
+
 console.log(`\nRun complete: ${totalSeen} records processed, ${totalNew} new.`);
 console.log(`Database: ${stats.total} opportunities | ${stats.ea} EA-relevant | ${stats.live} live on site.`);
 for (const s of staleSources) console.log(`STALE: ${s.source} — no confirmed data for ${s.days} days`);
+for (const s of silentZeros) console.log(`SILENT ZERO: ${s.source} — 0 fetched, no error (last runs: ${s.prior.join(', ')})`);
 
 fs.writeFileSync(SUMMARY_PATH, JSON.stringify({
   ranAt: new Date().toISOString(),
@@ -169,5 +179,6 @@ fs.writeFileSync(SUMMARY_PATH, JSON.stringify({
   totalSeen,
   perSource,
   staleSources,
+  silentZeros,
   db: { total: stats.total, ea: stats.ea, live: stats.live },
 }, null, 2));

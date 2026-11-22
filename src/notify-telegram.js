@@ -27,6 +27,7 @@ if (fs.existsSync(SUMMARY_PATH)) {
   if (failed.length) lines.push('', '⚠️ Failed sources:', ...failed.map(x => `  ${x.name}: ${x.error.slice(0, 120)}`));
   const partial = s.perSource.filter(x => !x.error && x.warning);
   if (partial.length) lines.push('', '⚠️ Partial sources:', ...partial.map(x => `  ${x.name}: ${x.warning.slice(0, 120)}`));
+  if (s.silentZeros?.length) lines.push('', '🔇 Silent zero (0 fetched, no error, was busy):', ...s.silentZeros.map(x => `  ${x.source}: last runs ${x.prior.join(', ')}`));
   if (s.staleSources?.length) lines.push('', '🕰 Stale (no fresh data >48h):', ...s.staleSources.map(x => `  ${x.source}: ${x.days}d`));
 } else {
   lines.push('⚠️ No run summary found — ingestion step likely crashed before writing results. Check the Actions log.');

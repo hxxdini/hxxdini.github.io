@@ -33,6 +33,14 @@ export function openDb() {
     CREATE INDEX IF NOT EXISTS idx_opp_deadline ON opportunities(deadline);
     CREATE INDEX IF NOT EXISTS idx_opp_source ON opportunities(source);
     CREATE INDEX IF NOT EXISTS idx_opp_ea ON opportunities(ea_relevant);
+    -- One row per source per pipeline run; feeds the silent-zero watchdog (src/stale.js).
+    CREATE TABLE IF NOT EXISTS source_runs (
+      source  TEXT NOT NULL,
+      ran_at  TEXT NOT NULL,
+      fetched INTEGER NOT NULL,
+      error   TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_runs_source ON source_runs(source, ran_at);
   `);
 
   const columns = new Set(db.prepare('PRAGMA table_info(opportunities)').all().map((column) => column.name));
