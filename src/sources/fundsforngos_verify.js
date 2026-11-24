@@ -16,12 +16,17 @@ const BATCH = 40;
 
 // Only /how-to-apply/ posts (and old www2 article URLs) are calls. The rest of the
 // feed is sample proposals, writing guides and newsletters.
-const NON_CALL_SECTIONS = new Set(['all-proposals', 'how-to-write-a-proposal', 'newsletter', 'cat', 'all-listings']);
+const NON_CALL_SECTIONS = new Set(['all-proposals', 'how-to-write-a-proposal', 'newsletter', 'cat', 'all-listings', 'article-contributions']);
+// On www, calls live only under /how-to-apply/. New editorial sections keep
+// appearing (e.g. /article-contributions/ blog posts, Nov 2026), so www is an
+// allowlist rather than a denylist.
+const WWW_CALL_SECTIONS = new Set(['how-to-apply']);
 
 export function isCallPost(url) {
   let u;
   try { u = new URL(url); } catch { return false; }
   const first = u.pathname.split('/').filter(Boolean)[0] ?? '';
+  if (/^(www\.)?fundsforngos\.org$/i.test(u.hostname)) return WWW_CALL_SECTIONS.has(first);
   return !NON_CALL_SECTIONS.has(first);
 }
 

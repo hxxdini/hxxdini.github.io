@@ -51,6 +51,10 @@ assert.equal(isCallPost('https://www2.fundsforngos.org/community-development-2/g
 assert.equal(isCallPost('https://www.fundsforngos.org/all-proposals/a-sample-grant-proposals-on-x/'), false);
 assert.equal(isCallPost('https://www.fundsforngos.org/newsletter/30-fresh-global-grants/'), false);
 assert.equal(isCallPost('https://www.fundsforngos.org/how-to-write-a-proposal/x/'), false);
+// Blog posts (Nov 2026) and any future editorial section on www are not calls.
+assert.equal(isCallPost('https://www.fundsforngos.org/article-contributions/6-the-subscription-idea-hiding-in-your-programme-officers-inbox/'), false);
+assert.equal(isCallPost('https://www.fundsforngos.org/some-new-section/x/'), false);
+assert.equal(isCallPost('https://fundsforngos.org/how-to-apply/grant-x/'), true);
 
 assert.equal(postLinks('<a href="https://twitter.com/x">t</a><a href="mailto:a@b.c">m</a>').length, 0);
 
