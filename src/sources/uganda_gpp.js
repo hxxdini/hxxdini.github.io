@@ -1,5 +1,6 @@
 import { makeId, enrich } from '../normalize.js';
 import { fetchRetry } from '../http.js';
+import { parseUgandaDistrict } from '../uganda-districts.js';
 
 // PPDA Government Procurement Portal (gpp.ppda.go.ug). The public site is an Angular
 // app; its bid-invitations page reads this JSON API:
@@ -47,6 +48,7 @@ export function mapGppNotice(n, today) {
       estimatedValue: Number.isFinite(value) ? value : null,
       financialYear: n.financial_year ?? null,
     },
+    ...parseUgandaDistrict(n.entity),
   });
 }
 

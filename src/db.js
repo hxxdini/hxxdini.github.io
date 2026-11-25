@@ -2,6 +2,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { classifyApplicant } from './normalize.js';
+import { entityFromRecord, parseUgandaDistrict } from './uganda-districts.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const DB_PATH = path.join(ROOT, 'data', 'fundradar.db');
@@ -51,6 +52,19 @@ export function openDb() {
   for (const [name, type] of [['official_url', 'TEXT'], ['documents', 'TEXT'], ['article_url', 'TEXT'], ['verify_status', 'TEXT'], ['verified_at', 'TEXT']]) {
     if (!columns.has(name)) db.exec(`ALTER TABLE opportunities ADD COLUMN ${name} ${type}`);
   }
+  // Uganda district of the procuring entity (src/uganda-districts.js); null for national agencies.
+  for (const name of ['district', 'region']) {
+    if (!columns.has(name)) db.exec(`ALTER TABLE opportunities ADD COLUMN ${name} TEXT`);
+  }
+  const unlabelled = db.prepare(`
+    SELECT id, raw, summary FROM opportunities
+    WHERE source LIKE 'Uganda %' AND district IS NULL
+  `).all();
+  const updateDistrict = db.prepare('UPDATE opportunities SET district = ?, region = ? WHERE id = ?');
+  for (const row of unlabelled) {
+    const hit = parseUgandaDistrict(entityFromRecord(row));
+    if (hit) updateDistrict.run(hit.district, hit.region, row.id);
+  }
 
   const unclassified = db.prepare(`
     SELECT id, title, summary, eligibility, countries, type
@@ -75,8 +89,8 @@ export function upsertOpportunity(db, o) {
   const stmt = db.prepare(`
     INSERT INTO opportunities
       (id, source, funder, title, url, summary, type, deadline, countries, sectors,
-       eligibility, amount, ea_relevant, published_at, first_seen, last_seen, raw)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       eligibility, amount, ea_relevant, published_at, first_seen, last_seen, raw, district, region)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(id) DO UPDATE SET
       last_seen = excluded.last_seen,
       title     = CASE WHEN excluded.title LIKE '%...' AND opportunities.title NOT LIKE '%...' THEN opportunities.title ELSE excluded.title END,
@@ -85,7 +99,9 @@ export function upsertOpportunity(db, o) {
                        ELSE COALESCE(excluded.deadline, opportunities.deadline) END,
       summary   = CASE WHEN opportunities.verified_at IS NOT NULL AND opportunities.summary IS NOT NULL THEN opportunities.summary
                        ELSE COALESCE(excluded.summary, opportunities.summary) END,
-      amount    = COALESCE(excluded.amount, opportunities.amount)
+      amount    = COALESCE(excluded.amount, opportunities.amount),
+      district  = COALESCE(excluded.district, opportunities.district),
+      region    = COALESCE(excluded.region, opportunities.region)
   `);
   const info = stmt.run(
     o.id, o.source, o.funder ?? null, o.title, o.url ?? null, o.summary ?? null,
@@ -93,7 +109,8 @@ export function upsertOpportunity(db, o) {
     JSON.stringify(o.countries ?? []), JSON.stringify(o.sectors ?? []),
     JSON.stringify(o.eligibility ?? []), o.amount ?? null,
     o.ea_relevant ? 1 : 0, o.published_at ?? null, now, now,
-    o.raw ? JSON.stringify(o.raw).slice(0, 20000) : null
+    o.raw ? JSON.stringify(o.raw).slice(0, 20000) : null,
+    o.district ?? null, o.region ?? null
   );
   const current = db.prepare(`
     SELECT title, summary, eligibility, countries, type

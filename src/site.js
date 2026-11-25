@@ -19,7 +19,7 @@ const db = openDb();
 
 const rows = db.prepare(`
   SELECT id, title, url, funder, source, type, deadline, countries, sectors, amount, first_seen,
-         applicant_type, school_eligible_uganda, official_url, verify_status
+         applicant_type, school_eligible_uganda, official_url, verify_status, district
   FROM opportunities
   WHERE ea_relevant = 1
     AND (deadline >= ? OR (deadline IS NULL AND first_seen >= datetime('now', '-14 days')))
@@ -32,7 +32,7 @@ const items = rows.map((r) => ({
   d: r.deadline, c: JSON.parse(r.countries ?? '[]'), k: JSON.parse(r.sectors ?? '[]'),
   a: r.amount, n: r.first_seen.slice(0, 10), p: r.applicant_type ?? 'unknown',
   g: r.school_eligible_uganda === 1,
-  o: r.official_url ?? null, v: r.verify_status ?? null,
+  o: r.official_url ?? null, v: r.verify_status ?? null, di: r.district ?? null,
 }));
 
 const nSources = db.prepare('SELECT COUNT(DISTINCT source) c FROM opportunities').get().c;
@@ -182,6 +182,7 @@ const html = `<title>BidRadar EA — Open tenders across East Africa</title>
   .tabs button:hover { color: var(--ink); }
   .tabs button[aria-pressed="true"] { background: var(--mint); color: var(--green-dark); box-shadow: inset 0 0 0 1px var(--green); }
   .select-wrap { position: relative; }
+  .district-note { margin: 10px 0 0; font-size: 12px; }
   .select-wrap::after { position: absolute; top: 50%; right: 12px; transform: translateY(-58%); color: var(--green); content: "⌄"; font-size: 17px; pointer-events: none; }
   select { height: 44px; padding: 0 34px 0 13px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--ink);
     font-size: 16px; font-weight: 700; cursor: pointer; -webkit-appearance: none; appearance: none; box-sizing: border-box; }
@@ -385,6 +386,11 @@ const html = `<title>BidRadar EA — Open tenders across East Africa</title>
         <h3>Country</h3>
         <div class="chips" id="countryChips"></div>
       </div>
+      <div class="panel" id="districtPanel" hidden>
+        <h3>Uganda district</h3>
+        <div class="chips" id="districtChips"></div>
+        <p class="district-note"><a href="./tenders/uganda/index.html">All district pages</a></p>
+      </div>
       <div class="panel">
         <h3>Sector (live)</h3>
         <div id="sectorChart"></div>
@@ -441,7 +447,7 @@ const html = `<title>BidRadar EA — Open tenders across East Africa</title>
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   };
 
-  var state = { type: 'all', country: 'all', sector: 'all', query: '', sort: 'deadline_asc', shortlistOnly: false, newOnly: false };
+  var state = { type: 'all', country: 'all', district: 'all', sector: 'all', query: '', sort: 'deadline_asc', shortlistOnly: false, newOnly: false };
   newCountEl.textContent = DATA.filter(function (o) { return o.n === BUILD_DATE; }).length;
   var current = [];
 
@@ -472,7 +478,7 @@ const html = `<title>BidRadar EA — Open tenders across East Africa</title>
   drawerClose.addEventListener('click', closeDrawer);
   sidebarBackdrop.addEventListener('click', closeDrawer);
   function updateFilterBadge() {
-    var n = (state.country !== 'all' ? 1 : 0) + (state.sector !== 'all' ? 1 : 0);
+    var n = (state.country !== 'all' ? 1 : 0) + (state.district !== 'all' ? 1 : 0) + (state.sector !== 'all' ? 1 : 0);
     if (n) { filterBadge.textContent = n; filterBadge.hidden = false; }
     else { filterBadge.hidden = true; }
   }
@@ -488,6 +494,18 @@ const html = `<title>BidRadar EA — Open tenders across East Africa</title>
   countryChipsEl.innerHTML = '<button data-c="all" aria-pressed="true">All</button>' +
     countryEntries.map(function (e) { return '<button data-c="' + esc(e[0]) + '" aria-pressed="false">' + esc(e[0]) + ' (' + e[1] + ')</button>'; }).join('') +
     '<button data-c="regional" aria-pressed="false">Regional / Global</button>';
+
+  // Uganda districts: only shown when some live tender has one (src/uganda-districts.js).
+  var districtCounts = {};
+  DATA.forEach(function (o) { if (o.di) districtCounts[o.di] = (districtCounts[o.di] || 0) + 1; });
+  var districtEntries = Object.entries(districtCounts).sort(function (a, b) { return b[1] - a[1] || a[0].localeCompare(b[0]); });
+  var districtPanel = document.getElementById('districtPanel');
+  var districtChipsEl = document.getElementById('districtChips');
+  if (districtEntries.length) {
+    districtPanel.hidden = false;
+    districtChipsEl.innerHTML = '<button data-d="all" aria-pressed="true">All</button>' +
+      districtEntries.map(function (e) { return '<button data-d="' + esc(e[0]) + '" aria-pressed="false">' + esc(e[0]) + ' (' + e[1] + ')</button>'; }).join('');
+  }
 
   var sectorCounts = {};
   DATA.forEach(function (o) { o.k.forEach(function (k) { sectorCounts[k] = (sectorCounts[k] || 0) + 1; }); });
@@ -533,11 +551,12 @@ const html = `<title>BidRadar EA — Open tenders across East Africa</title>
     if (state.type !== 'all' && o.y !== state.type) return false;
     if (state.country === 'regional' && o.c.length > 0) return false;
     if (state.country !== 'all' && state.country !== 'regional' && !o.c.some(function (c) { return c.indexOf(state.country) === 0; })) return false;
+    if (state.district !== 'all' && o.di !== state.district) return false;
     if (state.sector !== 'all' && o.k.indexOf(state.sector) === -1) return false;
     if (state.newOnly && o.n !== BUILD_DATE) return false;
     if (state.shortlistOnly && !shortlist.has(o.id)) return false;
     if (state.query) {
-      var hay = (o.t + ' ' + o.f + ' ' + o.s + ' ' + o.k.join(' ') + ' ' + o.c.join(' ') + ' ' + o.p).toLowerCase();
+      var hay = (o.t + ' ' + o.f + ' ' + o.s + ' ' + o.k.join(' ') + ' ' + o.c.join(' ') + ' ' + o.p + ' ' + (o.di || '')).toLowerCase();
       var words = state.query.toLowerCase().split(/\s+/);
       for (var i = 0; i < words.length; i++) { if (hay.indexOf(words[i]) === -1) return false; }
     }
@@ -563,7 +582,7 @@ const html = `<title>BidRadar EA — Open tenders across East Africa</title>
     } else if (o.v === 'rolling') {
       when = '<span class="rleft">Rolling deadline</span>';
     }
-    var meta = [o.f, o.c.map(function (c) { return c.split(',')[0]; }).join(', '), o.k[0], o.p !== 'unknown' ? 'Applicant: ' + o.p : null, o.g ? 'School eligible · Uganda' : null].filter(Boolean).join(' · ');
+    var meta = [o.f, o.c.map(function (c) { return c.split(',')[0]; }).join(', '), o.di ? o.di + ' District' : null, o.k[0], o.p !== 'unknown' ? 'Applicant: ' + o.p : null, o.g ? 'School eligible · Uganda' : null].filter(Boolean).join(' · ');
     var isNew = o.n === BUILD_DATE;
     var starred = shortlist.has(o.id);
     var official = safeHref(o.o), source = safeHref(o.u);
@@ -636,6 +655,13 @@ const html = `<title>BidRadar EA — Open tenders across East Africa</title>
     var b = e.target.closest('button'); if (!b) return;
     state.country = b.dataset.c;
     countryChipsEl.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+    refilter();
+    if (isMobile()) closeDrawer();
+  });
+  districtChipsEl.addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    state.district = b.dataset.d;
+    districtChipsEl.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
     refilter();
     if (isMobile()) closeDrawer();
   });

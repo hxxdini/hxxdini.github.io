@@ -6,6 +6,7 @@ import { canonicalCountry, detectTenderCategory, tenderCategoryLabel, TENDER_CAT
 import { PICKER_CSS, tenderPickerHtml } from './tender-picker.js';
 import { CONTACT, PRICES, channelLink, whatsappLink } from './config.js';
 import { externalLinksNewTab } from './external-links.js';
+import { UGANDA_DISTRICTS, districtSlug } from './uganda-districts.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DOCS = path.join(ROOT, 'docs');
@@ -53,6 +54,10 @@ function countryName(value) {
 function leadPath(id) {
   if (!/^[a-zA-Z0-9_-]+$/.test(id)) throw new Error(`Unsafe lead ID: ${id}`);
   return `lead/${id}.html`;
+}
+
+function districtPath(name) {
+  return `tenders/uganda/${districtSlug(name)}.html`;
 }
 
 function summary(row) {
@@ -107,8 +112,9 @@ function leadPage(row) {
     ...(row.amount ? [['Amount', row.amount]] : []),
     ['Who can apply', row.applicant_type === 'unknown' ? 'Not confirmed' : `${applicant} (automated tag; check source)`],
     ['Countries', countries.join(', ') || 'Regional / not specified'],
+    ...(row.district ? [['District', `${row.district} District${row.region && row.region !== row.district ? `, ${row.region}` : ''}`]] : []),
   ];
-  const main = `<article class="panel"><dl class="details">${details.map(([label, value]) => `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd></div>`).join('')}</dl><h2>About this opportunity</h2><p>${escapeHtml(description)}</p>${eligibility.length ? `<p class="notice">Eligibility labels: ${escapeHtml(eligibility.join(', '))}. Confirm with the source.</p>` : ''}${documents.length ? `<h2>Call documents</h2><ul class="docs">${documents.map((doc) => `<li><a href="${escapeHtml(safeUrl(doc.url))}" rel="noopener noreferrer">${escapeHtml(doc.label || 'Document')}</a></li>`).join('')}</ul>` : ''}<p class="actions">${official ? `<a class="cta" href="${escapeHtml(official)}" rel="noopener noreferrer">Official call ↗</a>` : ''}${source ? `<a class="${official ? 'cta ghost' : 'cta'}" href="${escapeHtml(source)}" rel="noopener noreferrer">View source listing ↗</a>` : ''}</p>${!official && !source ? '<p class="notice">Source link unavailable; verify before applying.</p>' : ''}${row.verified_at ? `<p class="notice">Checked ${escapeHtml(row.verified_at.slice(0, 10))}: BidRadar read the full call text${official ? ' and found the funder\'s own page' : ''}. Still confirm details with the funder before applying.</p>` : ''}<p class="notice">Source: ${escapeHtml(row.source)}. BidRadar links to the source listing; it does not accept applications.</p></article>${helpBox(row)}`;
+  const main = `<article class="panel"><dl class="details">${details.map(([label, value]) => `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd></div>`).join('')}</dl><h2>About this opportunity</h2><p>${escapeHtml(description)}</p>${eligibility.length ? `<p class="notice">Eligibility labels: ${escapeHtml(eligibility.join(', '))}. Confirm with the source.</p>` : ''}${documents.length ? `<h2>Call documents</h2><ul class="docs">${documents.map((doc) => `<li><a href="${escapeHtml(safeUrl(doc.url))}" rel="noopener noreferrer">${escapeHtml(doc.label || 'Document')}</a></li>`).join('')}</ul>` : ''}<p class="actions">${official ? `<a class="cta" href="${escapeHtml(official)}" rel="noopener noreferrer">Official call ↗</a>` : ''}${source ? `<a class="${official ? 'cta ghost' : 'cta'}" href="${escapeHtml(source)}" rel="noopener noreferrer">View source listing ↗</a>` : ''}</p>${!official && !source ? '<p class="notice">Source link unavailable; verify before applying.</p>' : ''}${row.verified_at ? `<p class="notice">Checked ${escapeHtml(row.verified_at.slice(0, 10))}: BidRadar read the full call text${official ? ' and found the funder\'s own page' : ''}. Still confirm details with the funder before applying.</p>` : ''}${row.district ? `<p class="notice">Procuring entity is in ${escapeHtml(row.district)} District. <a href="/${districtPath(row.district)}">More tenders in ${escapeHtml(row.district)}</a></p>` : ''}<p class="notice">Source: ${escapeHtml(row.source)}. BidRadar links to the source listing; it does not accept applications.</p></article>${helpBox(row)}`;
   write(relative, document({ title: row.title, description, canonical,
     structured: jsonLd(row, canonical, description), body: {
       hero: `<span class="eyebrow">${escapeHtml(singular[row.type] ?? 'Opportunity')} · ${escapeHtml(row.source)}</span><h1>${escapeHtml(row.title)}</h1><p>${escapeHtml(row.funder || row.source)}</p>`, main,
@@ -130,10 +136,14 @@ function landingPage(relative, title, rows, intro) {
 
 const db = openDb();
 const rows = db.prepare(`SELECT id, title, url, summary, funder, source, type, deadline, countries, eligibility, applicant_type,
-    amount, official_url, documents, verify_status, verified_at
+    amount, official_url, documents, verify_status, verified_at, district, region
   FROM opportunities WHERE ea_relevant = 1
     AND (deadline >= ? OR (deadline IS NULL AND first_seen >= datetime('now', '-14 days')))
   ORDER BY (deadline IS NULL), deadline, title COLLATE NOCASE`).all(today);
+// Every Uganda district that has ever had a tender, so its page exists (with an
+// honest empty state) between procurement seasons.
+const districtTotals = db.prepare(`SELECT district, region, COUNT(*) total FROM opportunities
+  WHERE district IS NOT NULL AND type = 'tender' GROUP BY district, region`).all();
 db.close();
 const live = new Set(rows.map((row) => row.id));
 const leadPaths = rows.map(leadPage);
@@ -219,7 +229,7 @@ write('tenders/pages.json', `${JSON.stringify(pickerData)}\n`);
 const tenderDirectory = [...tenderLinks.keys()].sort().map((country) => `<section class="panel"><h2>${escapeHtml(country)}</h2><div class="links">${tenderLinks.get(country).join('')}</div></section>`).join('');
 write('tenders/index.html', document({ title: 'Open tenders in East Africa by category', description: 'Browse open government, UN and donor tenders in East Africa by category and country: construction, ICT, medical, supplies, consultancy and more.', canonical: `${BASE}/tenders/index.html`, body: {
   hero: '<span class="eyebrow">Tenders · East Africa</span><h1>Find tenders in your line of business.</h1><p>Open tenders from official procurement portals and agencies across East Africa, grouped by what they buy.</p>',
-  main: `${picker}${tenderDirectory}<p class="notice">Categories: ${TENDER_CATEGORIES.map(([k, l]) => `${escapeHtml(l)} (${tenderCategoryTotals.get(k) ?? 0})`).join(' · ')}. Automated from tender titles; check each notice.</p>`,
+  main: `${picker}${tenderDirectory}<section class="panel"><h2>Uganda by district</h2><p>Tenders from district local governments, cities and municipal councils. <a href="/tenders/uganda/index.html">Browse Uganda tenders by district</a></p></section><p class="notice">Categories: ${TENDER_CATEGORIES.map(([k, l]) => `${escapeHtml(l)} (${tenderCategoryTotals.get(k) ?? 0})`).join(' · ')}. Automated from tender titles; check each notice.</p>`,
 } }));
 tenderPaths.push('tenders/index.html');
 const currentTenders = new Set(tenderPaths.map((relative) => path.basename(relative)));
@@ -231,6 +241,47 @@ for (const file of fs.readdirSync(path.join(DOCS, 'tenders')).filter((name) => n
   }));
 }
 
+// Uganda district pages: tenders whose procuring entity is a district, city or
+// municipal council (src/uganda-districts.js). Open tenders only, like the rest
+// of the site; districts with nothing open keep a noindex page with an empty state.
+const districtOpen = new Map();
+for (const row of rows) {
+  if (row.type !== 'tender' || !row.district) continue;
+  if (!districtOpen.has(row.district)) districtOpen.set(row.district, []);
+  districtOpen.get(row.district).push(row);
+}
+const EMPTY_DISTRICT = 'No open tenders right now. Districts post most tenders July–October.';
+const districtPaths = [];
+const districtCards = (group) => group.map((row) => `<article class="card"><span class="kicker">${escapeHtml(tenderCategoryLabel(detectTenderCategory(row.title, row.summary)))} · ${escapeHtml(row.source)}</span><h2><a href="/${leadPath(row.id)}">${escapeHtml(row.title)}</a></h2><p>${escapeHtml(row.summary ? String(row.summary).split(' — ')[0] : 'Procuring entity not listed')} · Deadline: ${escapeHtml(row.deadline || 'not listed')}</p></article>`).join('');
+for (const { district, region, total } of districtTotals) {
+  const group = districtOpen.get(district) ?? [];
+  const relative = districtPath(district);
+  const title = `Tenders in ${district} District, Uganda`;
+  const area = region && region !== district ? `${district} District (${region})` : `${district}`;
+  const description = group.length
+    ? `${group.length} open ${group.length === 1 ? 'tender' : 'tenders'} from local governments in ${area}, from Uganda's official procurement portals. Refreshed every four hours.`
+    : `Tenders from local governments in ${area}. ${EMPTY_DISTRICT}`;
+  const list = group.length
+    ? `<h2>${group.length} open ${group.length === 1 ? 'tender' : 'tenders'}</h2><div class="list">${districtCards(group)}</div>`
+    : `<div class="panel"><h2>${escapeHtml(EMPTY_DISTRICT)}</h2><p>BidRadar has tracked ${total} ${total === 1 ? 'tender' : 'tenders'} from ${escapeHtml(district)} so far. New ones appear here as soon as they are posted on the eGP or GPP portals.</p><p class="actions"><a class="cta" href="${channelLink}" rel="noopener">Get alerts on Telegram ↗</a><a class="cta ghost" href="/tenders/uganda/index.html">Other districts</a></p></div>`;
+  write(relative, document({ title, description, canonical: `${BASE}/${relative}`, noindex: group.length === 0, body: {
+    hero: `<span class="eyebrow">Tenders · Uganda${region && region !== district ? ` · ${escapeHtml(region)}` : ''}</span><h1>${escapeHtml(title)}</h1><p>Tenders from the district local government and the city, municipal and town councils in ${escapeHtml(district)}. The district is read from the procuring entity's name; national agencies are not listed by district.</p>`,
+    main: `<section aria-label="Open tenders">${list}<p class="notice">Always read the full notice on the source portal before bidding.</p></section><div style="margin-top:15px">${channelBox}${helpBox(null)}</div>`,
+  } }));
+  if (group.length) districtPaths.push(relative);
+}
+const regionOrder = [...new Set(UGANDA_DISTRICTS.map((d) => d.region))].sort();
+const districtByRegion = regionOrder.map((region) => {
+  const entries = districtTotals.filter((d) => d.region === region).sort((a, b) => a.district.localeCompare(b.district));
+  if (!entries.length) return '';
+  return `<section class="panel"><h2>${escapeHtml(region)}</h2><div class="links">${entries.map((d) => `<a href="/${districtPath(d.district)}">${escapeHtml(d.district)} (${(districtOpen.get(d.district) ?? []).length} open)</a>`).join('')}</div></section>`;
+}).join('');
+const openDistrictTotal = [...districtOpen.values()].reduce((n, g) => n + g.length, 0);
+write('tenders/uganda/index.html', document({ title: 'Uganda tenders by district', description: 'Open tenders from Uganda district local governments, cities and municipal councils, grouped by district and sub-region.', canonical: `${BASE}/tenders/uganda/index.html`, body: {
+  hero: '<span class="eyebrow">Tenders · Uganda</span><h1>Uganda tenders by district.</h1><p>Tenders from district local governments, cities and municipal councils, grouped by sub-region. Refreshed every four hours from the eGP and GPP portals.</p>',
+  main: `${openDistrictTotal ? '' : `<div class="panel"><h2>${escapeHtml(EMPTY_DISTRICT)}</h2><p>District pages below show what each district has posted before and fill up again when the new season starts.</p></div>`}${districtByRegion || '<div class="panel"><p>No district tenders tracked yet.</p></div>'}<p class="notice">${openDistrictTotal} open district ${openDistrictTotal === 1 ? 'tender' : 'tenders'}. The district comes from the procuring entity's name. Ministries and national agencies are not listed by district: see <a href="/tenders/index.html">tenders by category</a>.</p>`,
+} }));
+districtPaths.push('tenders/uganda/index.html');
 
 // Paid services. Contact and prices live in src/config.js.
 const steps = (items) => `<ol class="docs">${items.map((i) => `<li>${i}</li>`).join('')}</ol>`;
@@ -266,7 +317,7 @@ write('alerts.html', document({ title: 'Tender alerts for your business', descri
 } }));
 const offerPaths = ['bid-desk.html', 'alerts.html'];
 
-const sitemapPaths = ['index.html', 'for-you.html', ...offerPaths, ...leadPaths, ...landingPaths, ...tenderPaths];
+const sitemapPaths = ['index.html', 'for-you.html', ...offerPaths, ...leadPaths, ...landingPaths, ...tenderPaths, ...districtPaths];
 write('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sitemapPaths.map((relative) => `  <url><loc>${BASE}/${escapeHtml(relative)}</loc></url>`).join('\n')}\n</urlset>\n`);
 write('robots.txt', `User-agent: *\nAllow: /\nSitemap: ${BASE}/sitemap.xml\n`);
-console.log(`SEO pages: ${leadPaths.length} live leads, ${landingPaths.length} landing pages, ${tenderPaths.length} tender category pages, ${sitemapPaths.length} sitemap URLs`);
+console.log(`SEO pages: ${leadPaths.length} live leads, ${landingPaths.length} landing pages, ${tenderPaths.length} tender category pages, ${districtTotals.length} district pages, ${sitemapPaths.length} sitemap URLs`);

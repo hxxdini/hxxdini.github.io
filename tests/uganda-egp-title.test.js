@@ -34,7 +34,8 @@ db.exec(`
     eligibility TEXT, amount TEXT, ea_relevant INTEGER, published_at TEXT,
     first_seen TEXT NOT NULL, last_seen TEXT NOT NULL, raw TEXT,
     applicant_type TEXT, school_eligible_uganda INTEGER,
-    official_url TEXT, documents TEXT, article_url TEXT, verify_status TEXT, verified_at TEXT
+    official_url TEXT, documents TEXT, article_url TEXT, verify_status TEXT, verified_at TEXT,
+    district TEXT, region TEXT
   )
 `);
 

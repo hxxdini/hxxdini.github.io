@@ -8,7 +8,7 @@ const today = new Date().toISOString().slice(0, 10);
 const db = openDb();
 
 const rows = db.prepare(`
-  SELECT id, title, source, deadline, url, applicant_type, countries
+  SELECT id, title, source, deadline, url, applicant_type, countries, district, region
   FROM opportunities
   WHERE ea_relevant = 1
     AND (deadline >= ? OR (deadline IS NULL AND first_seen >= datetime('now', '-14 days')))
@@ -23,6 +23,7 @@ const leads = rows.map((row) => ({
   link: row.url,
   applicant: row.applicant_type ?? 'unknown',
   countries: JSON.parse(row.countries ?? '[]'),
+  ...(row.district ? { district: row.district, region: row.region } : {}),
 }));
 
 const outputPath = path.join(ROOT, 'docs', 'for-you.json');

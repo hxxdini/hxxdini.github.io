@@ -1,5 +1,6 @@
 import { makeId, enrich, stripHtml } from '../normalize.js';
 import { fetchRetry, BROWSER_UA } from '../http.js';
+import { parseUgandaDistrict } from '../uganda-districts.js';
 
 // Uganda e-Government Procurement portal (PPDA).
 // Notice URLs are absolute: https://egpuganda.go.ug/index/{id}_egp
@@ -143,6 +144,7 @@ export async function fetchUgandaEgp() {
       published: r.published,
       countries: ['Uganda'],
       raw: { noticeId: r.noticeId, ref: r.ref, entity: r.entity, type: r.type },
+      ...parseUgandaDistrict(r.entity),
     }));
   }
   return out;
