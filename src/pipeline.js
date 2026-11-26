@@ -28,6 +28,7 @@ import { fetchIgad } from './sources/igad.js';
 import { fetchAfricanUnion } from './sources/african_union.js';
 import { fetchTanzaniaNest } from './sources/tanzania_nest.js';
 import { fetchSomaliJobs } from './sources/somalijobs.js';
+import { fetchWelthungerhilfe } from './sources/welthungerhilfe.js';
 import { verifyFundsForNgos, verifyWebRadarFundsForNgos, isCallPost } from './sources/fundsforngos_verify.js';
 import { computeStaleSources, computeSilentZeros, STALE_HOURS, SILENT_ZERO_RUNS } from './stale.js';
 
@@ -64,6 +65,7 @@ const SOURCES = [
   ['African Union Commission', fetchAfricanUnion],
   ['Tanzania NeST (PPRA)', fetchTanzaniaNest],
   ['SomaliJobs tenders', fetchSomaliJobs],
+  ['Welthungerhilfe', fetchWelthungerhilfe],
 ];
 
 const db = openDb();
