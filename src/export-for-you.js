@@ -2,13 +2,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { openDb } from './db.js';
+import { buyerType } from './buyer-type.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const today = new Date().toISOString().slice(0, 10);
 const db = openDb();
 
 const rows = db.prepare(`
-  SELECT id, title, source, deadline, url, applicant_type, countries, district, region
+  SELECT id, title, source, funder, deadline, url, applicant_type, countries, district, region
   FROM opportunities
   WHERE ea_relevant = 1
     AND (deadline >= ? OR (deadline IS NULL AND first_seen >= datetime('now', '-14 days')))
@@ -19,6 +20,7 @@ const leads = rows.map((row) => ({
   id: row.id,
   title: row.title,
   source: row.source,
+  buyer: buyerType(row)?.key ?? 'unknown',
   deadline: row.deadline,
   link: row.url,
   applicant: row.applicant_type ?? 'unknown',

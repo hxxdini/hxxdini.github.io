@@ -7,6 +7,7 @@ import { PICKER_CSS, tenderPickerHtml } from './tender-picker.js';
 import { CONTACT, PRICES, channelLink, whatsappLink } from './config.js';
 import { externalLinksNewTab } from './external-links.js';
 import { UGANDA_DISTRICTS, districtSlug } from './uganda-districts.js';
+import { buyerType } from './buyer-type.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DOCS = path.join(ROOT, 'docs');
@@ -107,6 +108,7 @@ function leadPage(row) {
   const kind = kinds[row.type] ?? 'Opportunities';
   const details = [
     ['Type', singular[row.type] ?? 'Opportunity'], ['Funder', row.funder || 'Not specified'],
+    ...(buyerType(row) ? [[row.type === 'tender' ? 'Buyer type' : 'Funder type', buyerType(row).label]] : []),
     ['Deadline', row.verify_status === 'rolling' && !row.deadline ? 'Rolling / no fixed closing date'
       : row.deadline ? `${row.deadline}${row.verify_status === 'deadline' ? ' (confirmed in full call text)' : ''}` : 'Not listed by source'],
     ...(row.amount ? [['Amount', row.amount]] : []),
@@ -126,7 +128,7 @@ function leadPage(row) {
 function landingPage(relative, title, rows, intro) {
   const canonical = `${BASE}/${relative}`;
   const description = `${title}: ${rows.length} current BidRadar listings. Confirm each opportunity with its original source.`;
-  const cards = rows.map((row) => `<article class="card"><span class="kicker">${escapeHtml(kinds[row.type] ?? 'Opportunities')} · ${escapeHtml(row.source)}</span><h2><a href="/${leadPath(row.id)}">${escapeHtml(row.title)}</a></h2><p>${escapeHtml(row.funder || 'Funder not specified')} · Deadline: ${escapeHtml(row.deadline || 'not listed')}</p></article>`).join('');
+  const cards = rows.map((row) => `<article class="card"><span class="kicker">${escapeHtml(kinds[row.type] ?? 'Opportunities')}${buyerType(row) ? ` · ${escapeHtml(buyerType(row).label)}` : ''} · ${escapeHtml(row.source)}</span><h2><a href="/${leadPath(row.id)}">${escapeHtml(row.title)}</a></h2><p>${escapeHtml(row.funder || 'Funder not specified')} · Deadline: ${escapeHtml(row.deadline || 'not listed')}</p></article>`).join('');
   write(relative, document({ title, description, canonical, body: {
     hero: `<span class="eyebrow">Explore funding · East Africa</span><h1>${escapeHtml(title)}</h1><p>${escapeHtml(intro)}</p>`,
     main: `<section aria-label="Current listings"><h2>${rows.length} current ${rows.length === 1 ? 'listing' : 'listings'}</h2><p class="notice">Applicant labels are automated discovery hints, not eligibility guarantees. Confirm details at the original source.</p><div class="list">${cards}</div></section><div style="margin-top:15px">${channelBox}${helpBox(null)}</div>`,
